@@ -1,0 +1,3 @@
+[submodule "node"]
+	path = node
+	url = https://github.com/electron/node
