@@ -86,7 +86,6 @@
         },
         'cflags': [
           '-Wno-deprecated-declarations',
-          '-Wno-undefined-var-template',
           '-Wno-switch',
           '-Wno-unused-function',
           '-Wno-sign-compare',
