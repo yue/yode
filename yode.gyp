@@ -19,12 +19,21 @@
       'conditions': [
         ['OS=="mac"', {
           'xcode_settings': {
+            # Generates symbols and strip the binary.
+            'DEBUG_INFORMATION_FORMAT': 'dwarf-with-dsym',
+            'DEPLOYMENT_POSTPROCESSING': 'YES',
+            'STRIP_INSTALLED_PRODUCT': 'YES',
+            'STRIPFLAGS': '-x',
+            # Force loading all objects of node, otherwise some built-in modules
+            # won't load.
             'OTHER_LDFLAGS': [
               '-Wl,-force_load,<(PRODUCT_DIR)/libnode.a',
             ],
           },
         }],
         ['OS in "linux freebsd"', {
+          # Force loading all objects of node, otherwise some built-in modules
+          # won't load.
           'ldflags': [
             '-Wl,--whole-archive,<(OBJ_DIR)/node/libnode.a',
             '-Wl,--no-whole-archive',
