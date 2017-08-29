@@ -28,4 +28,5 @@ if (!fs.existsSync(config_gypi))
 execSync(`python node/tools/gyp/gyp_main.py yode.gyp -f ninja -Dhost_arch=x64 -Dtarget_arch=${target_arch} -Icommon.gypi --depth .`)
 
 // Build.
-execSync('ninja -C out/Release yode')
+const ninja = process.platform == 'win32' ? 'ninja.exe' : 'ninja'
+execSync(`ninja/${ninja} -C out/Release yode`)
