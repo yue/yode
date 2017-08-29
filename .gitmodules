@@ -1,3 +1,3 @@
 [submodule "node"]
 	path = node
-	url = https://github.com/electron/node
+	url = https://github.com/yue/node.git
