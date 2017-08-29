@@ -2,6 +2,11 @@
 
 const fs = require('fs')
 
+// Specify target_arch.
+let target_arch = 'x64'
+if (process.argv.length > 2)
+  target_arch = process.argv[2]
+
 // Wrapper of execSync that prints output.
 const execSync = (command, options = {}) => {
   if (!options.stdio)
@@ -20,7 +25,7 @@ if (!fs.existsSync(config_gypi))
   fs.writeFileSync(config_gypi, "\n{'variables':{}}")
 
 // Update the build configuration.
-execSync('./node/tools/gyp/gyp yode.gyp -f ninja -Dhost_arch=x64 -Dtarget_arch=x64 -Icommon.gypi --depth .')
+execSync(`python node/tools/gyp/gyp_main.py yode.gyp -f ninja -Dhost_arch=x64 -Dtarget_arch=${target_arch} -Icommon.gypi --depth .`)
 
 // Build.
 execSync('ninja -C out/Release yode')
