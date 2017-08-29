@@ -18,9 +18,10 @@ addons:
       - ubuntu-toolchain-r-test
       - sourceline: 'ppa:webkit-team/ppa'
     packages:
-      - xvfb
-      - gcc-4.8-multilib
-      - g++-4.8-multilib
+      - gcc-6
+      - g++-6
+      - gcc-6-multilib
+      - g++-6-multilib
       - gcc-arm-linux-gnueabihf
       - g++-arm-linux-gnueabihf
       - linux-libc-dev:i386
