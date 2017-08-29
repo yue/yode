@@ -7,6 +7,7 @@
     'component%': 'static_library',
     'library%': 'static_library',
     'python': 'python',
+    'coverage': 'false',
     'openssl_fips': '',
     'openssl_no_asm': 1,
     'use_openssl_def': 0,
