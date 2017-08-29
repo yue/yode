@@ -6,6 +6,7 @@ notifications:
 language: node_js
 node_js:
   - "8"
+compiler: clang
 os:
   - osx
   - linux
@@ -18,10 +19,8 @@ addons:
       - ubuntu-toolchain-r-test
       - sourceline: 'ppa:webkit-team/ppa'
     packages:
-      - gcc-6
-      - g++-6
-      - gcc-6-multilib
-      - g++-6-multilib
+      - gcc-4.8-multilib
+      - g++-4.8-multilib
       - gcc-arm-linux-gnueabihf
       - g++-arm-linux-gnueabihf
       - linux-libc-dev:i386
