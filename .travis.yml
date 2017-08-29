@@ -1,0 +1,44 @@
+git:
+  depth: 10
+notifications:
+  email: false
+
+language: node_js
+node_js:
+  - "8"
+os:
+  - osx
+  - linux
+osx_image: xcode8.3
+dist: trusty
+
+addons:
+  apt:
+    sources:
+      - ubuntu-toolchain-r-test
+      - sourceline: 'ppa:webkit-team/ppa'
+    packages:
+      - xvfb
+      - gcc-4.8-multilib
+      - g++-4.8-multilib
+      - gcc-arm-linux-gnueabihf
+      - g++-arm-linux-gnueabihf
+      - linux-libc-dev:i386
+      - libc6-dev-armhf-cross
+      - linux-libc-dev-armhf-cross
+      - binutils-aarch64-linux-gnu
+
+env:
+  - TARGET_ARCH=x64
+
+matrix:
+  include:
+    - os: linux
+      env:
+        - TARGET_ARCH=ia32
+    - os: linux
+      env:
+        - TARGET_ARCH=arm
+
+script:
+  - node build.js $TARGET_ARCH
