@@ -64,13 +64,19 @@
           'node/deps/icu-small/source/i18n',
           'node/deps/icu-small/source/tools/toolutil',
         ],
+        'defines': [
+          'U_STATIC_IMPLEMENTATION=1',
+        ],
       }],
-      ['_target_name in ["libuv", "http_parser", "openssl", "openssl-cli", "cares", "node", "zlib", "genrb", "genccode"] or _target_name.startswith("v8") or _target_name.startswith("icu")', {
+      ['_target_name in ["libuv", "http_parser", "openssl", "openssl-cli", "cares", "node", "zlib", "mksnapshot", "genrb", "genccode"] or _target_name.startswith("v8") or _target_name.startswith("icu")', {
         'msvs_settings': {
           'VCCLCompilerTool': {
             'WarningLevel': 0,
           },
         },
+        'msvs_disabled_warnings': [
+          4251,
+        ],
         'xcode_settings': {
           'WARNING_CFLAGS': [
             '-Wno-deprecated-declarations',
@@ -97,4 +103,20 @@
       }],
     ],
   },
+  'conditions': [
+    ['OS=="win"', {
+      'target_defaults': {
+        'configurations': {
+          'Debug_x64': {
+            'inherit_from': ['Debug'],
+            'msvs_configuration_platform': 'x64',
+          },
+          'Release_x64': {
+            'inherit_from': ['Release'],
+            'msvs_configuration_platform': 'x64',
+          },
+        },
+      },
+    }],  # OS=="win"
+  ],
 }
