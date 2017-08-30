@@ -29,5 +29,5 @@ if (!fs.existsSync(config_gypi))
 execSync(`python node/tools/gyp/gyp_main.py yode.gyp -f ninja -Dhost_arch=x64 -Dtarget_arch=${target_arch} -Icommon.gypi --depth .`)
 
 // Build.
-const epath = `ninja` + path.delimiter + process.env.PATH
+const epath = `deps${path.sep}ninja${path.delimiter}${process.env.PATH}`
 execSync(`ninja -C out/Release yode`, {env: {PATH: epath}})
