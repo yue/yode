@@ -117,21 +117,4 @@
       }],
     ],
   },
-  'conditions': [
-    ['OS=="win"', {
-      'target_defaults': {
-        # These targets are required by gyp.
-        'configurations': {
-          'Debug_x64': {
-            'inherit_from': ['Debug'],
-            'msvs_configuration_platform': 'x64',
-          },
-          'Release_x64': {
-            'inherit_from': ['Release'],
-            'msvs_configuration_platform': 'x64',
-          },
-        },
-      },
-    }],  # OS=="win"
-  ],
 }
