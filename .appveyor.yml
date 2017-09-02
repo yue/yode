@@ -4,6 +4,7 @@ os: Visual Studio 2015
 
 init:
   - git config --global core.autocrlf input
+  - git submodule update --init --recursive
 
 platform: x64
 environment:
