@@ -13,7 +13,9 @@ const execSync = (command, options = {}) => {
   if (!options.stdio)
     options.stdio = 'inherit'
   if (options.env)
-    options.env = Object.assign(options.env, process.env)
+    options.env = Object.assign(options.env, options.env)
+  else
+    options.env = Object.assign({}, process.env)
   return require('child_process').execSync(command, options)
 }
 
@@ -29,5 +31,5 @@ if (!fs.existsSync(config_gypi))
 execSync(`python node/tools/gyp/gyp_main.py yode.gyp -f ninja -Dhost_arch=x64 -Dtarget_arch=${target_arch} -Icommon.gypi --depth .`)
 
 // Build.
-const epath = `deps${path.sep}ninja${path.delimiter}${process.env.PATH}`
+const epath = `${path.join('deps', 'ninja')}${path.delimiter}${process.env.PATH}`
 execSync(`ninja -C out/Release yode`, {env: {PATH: epath}})
