@@ -58,17 +58,31 @@
       'node/deps/v8/include',
     ],
     'target_conditions': [
+      ['_target_name=="node" and OS=="win"', {
+        # Force loading all objects of node, otherwise some built-in modules
+        # won't load.
+        'sources': [
+          'deps/node.def',
+        ],
+        'defines': [
+          # We want to export Node's symbols but do not wish to change its
+          # vc runtime settings.
+          'NODE_SHARED_MODE=1',
+          # ICU is built as static library and this has to be defined for its
+          # users on Windows.
+          'U_STATIC_IMPLEMENTATION=1',
+        ],
+      }],
       ['_target_name in ["node", "genrb", "genccode"] or _target_name.startswith("icu")', {
+        # Somehow Node's gyp files are not adding the include dirs.
         'include_dirs': [
           'node/deps/icu-small/source/common',
           'node/deps/icu-small/source/i18n',
           'node/deps/icu-small/source/tools/toolutil',
         ],
-        'defines': [
-          'U_STATIC_IMPLEMENTATION=1',
-        ],
       }],
       ['_target_name in ["libuv", "http_parser", "openssl", "openssl-cli", "cares", "node", "zlib", "mksnapshot", "genrb", "genccode"] or _target_name.startswith("v8") or _target_name.startswith("icu")', {
+        # Suppress all the warnings in Node.
         'msvs_settings': {
           'VCCLCompilerTool': {
             'WarningLevel': 0,
@@ -106,6 +120,7 @@
   'conditions': [
     ['OS=="win"', {
       'target_defaults': {
+        # These targets are required by gyp.
         'configurations': {
           'Debug_x64': {
             'inherit_from': ['Debug'],

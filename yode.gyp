@@ -4,7 +4,8 @@
       'target_name': 'yode',
       'type': 'executable',
       'sources': [
-        'src/main.cc'
+        'src/main.cc',
+        'deps/node.def',
       ],
       'include_dirs': [
         '.',
