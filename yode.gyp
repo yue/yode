@@ -41,7 +41,14 @@
               # Manifest file.
               'EmbedManifest': 'true',
               'AdditionalManifestFiles': 'src/yode.exe.manifest'
-            }
+            },
+            'VCLinkerTool': {
+              # Using 5.01 would make Windows turn on compatibility mode for
+              # certain win32 APIs, which would return wrong results.
+              'MinimumRequiredVersion': '5.02',
+              # A win32 GUI program.
+              'SubSystem': '2',
+            },
           },
         }],
         ['OS in "linux freebsd"', {
