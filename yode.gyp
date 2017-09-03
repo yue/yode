@@ -5,9 +5,16 @@
       'type': 'executable',
       'sources': [
         'src/main.cc',
+        'src/yode.cc',
+        'src/yode.h',
       ],
       'include_dirs': [
         '.',
+        'node/deps/cares/include',  # for ares.h
+        'node/deps/uv/include',  # for uv.h
+      ],
+      'defines': [
+        'NODE_WANT_INTERNALS=1',
       ],
       'dependencies': [
         'node/node.gyp:node',
