@@ -54,6 +54,9 @@
     'icu_ver_major': '59',
   },
   'target_defaults': {
+    'includes': [
+      'deps/filename_rules.gypi',
+    ],
     'include_dirs': [
       'node/deps/v8/include',
     ],

@@ -4,6 +4,8 @@
 #ifndef SRC_YODE_H_
 #define SRC_YODE_H_
 
+#include <memory>
+
 namespace node {
 class Environment;
 }
@@ -13,7 +15,10 @@ namespace yode {
 // Initialize Node and enter GUI message loop.
 int Start(int argc, char* argv[]);
 
-// Run the GUI message loop for once.
+// Initialize platform specific code.
+void Init();
+
+// Run the GUI message loop for once, implemented by different platforms.
 bool RunLoop(node::Environment* env);
 
 }  // namespace yode

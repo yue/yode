@@ -5,6 +5,8 @@
 #include <windows.h>
 #endif
 
+#include <stdio.h>
+
 #include "src/yode.h"
 
 #if defined(WIN32)

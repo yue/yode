@@ -5,8 +5,17 @@
       'type': 'executable',
       'sources': [
         'src/main.cc',
+        'src/node_integration.cc',
+        'src/node_integration.h',
+        'src/node_integration_linux.cc',
+        'src/node_integration_linux.h',
+        'src/node_integration_mac.h',
+        'src/node_integration_mac.mm',
+        'src/node_integration_win.cc',
+        'src/node_integration_win.h',
         'src/yode.cc',
         'src/yode.h',
+        'src/yode_mac.mm',
       ],
       'include_dirs': [
         '.',
@@ -25,6 +34,11 @@
       ],
       'conditions': [
         ['OS=="mac"', {
+          'link_settings': {
+            'libraries': [
+              '$(SDKROOT)/System/Library/Frameworks/AppKit.framework',
+            ],
+          },
           'xcode_settings': {
             # Generates symbols and strip the binary.
             'DEBUG_INFORMATION_FORMAT': 'dwarf-with-dsym',
