@@ -5,7 +5,6 @@
       'type': 'executable',
       'sources': [
         'src/main.cc',
-        'deps/node.def',
       ],
       'include_dirs': [
         '.',
@@ -30,6 +29,19 @@
             'OTHER_LDFLAGS': [
               '-Wl,-force_load,<(PRODUCT_DIR)/libnode.a',
             ],
+          },
+        }],
+        ['OS=="win"', {
+          'sources': [
+            'src/yode.rc',
+            'deps/node.def',
+          ],
+          'msvs_settings': {
+            'VCManifestTool': {
+              # Manifest file.
+              'EmbedManifest': 'true',
+              'AdditionalManifestFiles': 'src/yode.exe.manifest'
+            }
           },
         }],
         ['OS in "linux freebsd"', {
