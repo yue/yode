@@ -10,7 +10,7 @@ if (process.argv.length > 2)
 
 // Wrapper of execSync that prints output.
 const execSync = (command, options = {}) => {
-  if (!options.stdio)
+  if (options.stdio === undefined)
     options.stdio = 'inherit'
   if (options.env)
     options.env = Object.assign(options.env, options.env)
@@ -18,6 +18,10 @@ const execSync = (command, options = {}) => {
     options.env = Object.assign({}, process.env)
   return require('child_process').execSync(command, options)
 }
+
+// Sync submodule.
+execSync('git submodule sync --recursive', {stdio: null})
+execSync('git submodule update --init --recursive', {stdio: null})
 
 // Usually dynamically generated, but we skipped Node's build script.
 const icu_config_gypi = 'node/icu_config.gypi'
