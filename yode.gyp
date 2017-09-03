@@ -15,6 +15,7 @@
         'src/node_integration_win.h',
         'src/yode.cc',
         'src/yode.h',
+        'src/yode_linux.cc',
         'src/yode_mac.mm',
       ],
       'include_dirs': [
@@ -73,6 +74,12 @@
           },
         }],
         ['OS in "linux freebsd"', {
+          'libraries': [
+            '<!@(pkg-config gtk+-3.0 --libs)',
+          ],
+          'include_dirs': [
+            '<!@(pkg-config gtk+-3.0 --cflags-only-I | sed s/-I//g)',
+          ],
           # Force loading all objects of node, otherwise some built-in modules
           # won't load.
           'ldflags': [

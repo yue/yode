@@ -18,6 +18,9 @@ class NodeIntegrationMac : public NodeIntegration {
   void PollEvents() override;
   void PostTask(const std::function<void()>& task) override;
 
+  // Called when uv's watcher queue changes.
+  static void OnWatcherQueueChanged(uv_loop_t* loop);
+
   DISALLOW_COPY_AND_ASSIGN(NodeIntegrationMac);
 };
 
