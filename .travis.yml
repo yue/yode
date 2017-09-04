@@ -19,6 +19,7 @@ addons:
       - ubuntu-toolchain-r-test
       - sourceline: 'ppa:webkit-team/ppa'
     packages:
+      - libgtk-3-dev
       - gcc-4.8-multilib
       - g++-4.8-multilib
       - gcc-arm-linux-gnueabihf
