@@ -17,6 +17,7 @@
         'src/yode.h',
         'src/yode_linux.cc',
         'src/yode_mac.mm',
+        'src/yode_win.cc',
       ],
       'include_dirs': [
         '.',

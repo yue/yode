@@ -4,14 +4,20 @@
 
 #include "src/node_integration_win.h"
 
-#include <windows.h>
-
 namespace yode {
 
+// static
+CRITICAL_SECTION NodeIntegrationWin::lock_;
+
+// static
+std::unordered_map<UINT_PTR, std::function<void()>> NodeIntegrationWin::tasks_;
+
 NodeIntegrationWin::NodeIntegrationWin() {
+  InitializeCriticalSectionAndSpinCount(&lock_, 0x00000400);
 }
 
 NodeIntegrationWin::~NodeIntegrationWin() {
+  DeleteCriticalSection(&lock_);
 }
 
 void NodeIntegrationWin::PollEvents() {
@@ -35,6 +41,26 @@ void NodeIntegrationWin::PollEvents() {
                                bytes,
                                key,
                                overlapped);
+}
+
+void NodeIntegrationWin::PostTask(const std::function<void()>& task) {
+  UINT_PTR event = ::SetTimer(NULL, NULL, USER_TIMER_MINIMUM, OnTimer);
+  ::EnterCriticalSection(&lock_);
+  tasks_[event] = task;
+  ::LeaveCriticalSection(&lock_);
+}
+
+// static
+void CALLBACK NodeIntegrationWin::OnTimer(HWND, UINT, UINT_PTR event, DWORD) {
+  ::KillTimer(NULL, event);
+  std::function<void()> task;
+  {
+    ::EnterCriticalSection(&lock_);
+    task = tasks_[event];
+    tasks_.erase(event);
+    ::LeaveCriticalSection(&lock_);
+  }
+  task();
 }
 
 // static
