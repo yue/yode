@@ -12,6 +12,7 @@ os:
   - linux
 osx_image: xcode8.3
 dist: trusty
+sudo: required
 
 addons:
   apt:
@@ -19,8 +20,6 @@ addons:
       - ubuntu-toolchain-r-test
       - sourceline: 'ppa:webkit-team/ppa'
     packages:
-      - libgtk-3-dev
-      - libgtk-3-dev:i386
       - gcc-4.8-multilib
       - g++-4.8-multilib
       - gcc-arm-linux-gnueabihf
@@ -39,5 +38,33 @@ matrix:
       env:
         - TARGET_ARCH=ia32
 
+before_install:
+  - if [[ "$TRAVIS_OS_NAME" == "linux" && "$TARGET_ARCH" == "x64" ]]; then
+      sudo apt-get update;
+      sudo apt-get install libgtk-3-dev;
+    fi
+  - if [[ "$TRAVIS_OS_NAME" == "linux" && "$TARGET_ARCH" == "ia32" ]]; then
+      sudo dpkg --add-architecture i386;
+      sudo apt-get update;
+      export PKG_CONFIG_PATH=/usr/lib/i386-linux-gnu/pkgconfig/;
+      echo "Fixing dependencies";
+      sudo apt-get -f install;
+      sudo dpkg --configure -a;
+      sudo apt-get -f install;
+      echo "Installing GTK-3.0...";
+      sudo apt-get install libgirepository-1.0-1:i386;
+      sudo apt-get install libglib2.0-dev:i386;
+      sudo apt-get install gir1.2-glib-2.0:i386;
+      sudo apt-get install gir1.2-atk-1.0:i386;
+      sudo apt-get install libatk1.0-dev:i386;
+      sudo apt-get install libfreetype6-dev:i386;
+      sudo apt-get install libfontconfig1-dev:i386;
+      sudo apt-get install libcairo2-dev:i386;
+      sudo apt-get install libgdk-pixbuf2.0-dev:i386;
+      sudo apt-get install libpango1.0-dev:i386;
+      sudo apt-get install libgtk2.0-dev:i386;
+      sudo apt-get install libgtk-3-dev:i386;
+    fi
+
 script:
-  - env CXX=clang++ node build.js $TARGET_ARCH
+  - env CC=clang CXX=clang++ node build.js $TARGET_ARCH
