@@ -4,6 +4,8 @@
 
 #include "src/node_integration_win.h"
 
+#include "node/deps/uv/src/uv-common.h"
+
 // http://blogs.msdn.com/oldnewthing/archive/2004/10/25/247180.aspx
 extern "C" IMAGE_DOS_HEADER __ImageBase;
 
@@ -42,13 +44,21 @@ NodeIntegrationWin::~NodeIntegrationWin() {
 }
 
 void NodeIntegrationWin::PollEvents() {
-  // If there are other kinds of events pending, uv_backend_timeout will
-  // instruct us not to wait.
   DWORD bytes, timeout;
   ULONG_PTR key;
   OVERLAPPED* overlapped;
 
+  // If there are other kinds of events pending, uv_backend_timeout will
+  // instruct us not to wait.
   timeout = uv_backend_timeout(uv_loop_);
+
+  // When nothings is active in loop, timeout would be 0, but we want the
+  // loop to keep waiting forever in that case.
+  if (timeout == 0 &&
+      (uv_loop_->stop_flag != 0 ||
+       !uv__has_active_handles(uv_loop_) && !uv__has_active_reqs(uv_loop_))) {
+    timeout = INFINITE;
+  }
 
   GetQueuedCompletionStatus(uv_loop_->iocp,
                             &bytes,
