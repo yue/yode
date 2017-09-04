@@ -70,7 +70,7 @@
         'defines': [
           # We want to export Node's symbols but do not wish to change its
           # vc runtime settings.
-          'NODE_SHARED_MODE=1',
+          'NODE_SHARED_MODE',
           # ICU is built as static library and this has to be defined for its
           # users on Windows.
           'U_STATIC_IMPLEMENTATION=1',

@@ -25,6 +25,9 @@
       ],
       'defines': [
         'NODE_WANT_INTERNALS=1',
+        'HAVE_OPENSSL=1',
+        'HAVE_INSPECTOR=1',
+        'NODE_SHARED_MODE',
       ],
       'dependencies': [
         'node/node.gyp:node',
