@@ -18,6 +18,8 @@ bool g_first_runloop = true;
 
 // Inject yode's version to process.versions.
 bool InjectYode(node::Environment* env) {
+  // Initialize GUI after Node gets initialized.
+  Init();
   // versions = process.versions
   CHECK(!env->process_object().IsEmpty());
   v8::HandleScope handle_scope(env->isolate());
@@ -51,9 +53,6 @@ bool RunLoopWrapper(node::Environment* env) {
 }  // namespace
 
 int Start(int argc, char* argv[]) {
-  // Initialize GUI.
-  Init();
-
   // Prepare node integration.
   g_node_integration.reset(NodeIntegration::Create());
   g_node_integration->Init();

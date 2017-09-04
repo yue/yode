@@ -8,6 +8,10 @@
 namespace yode {
 
 void Init() {
+#if _DEBUG
+  // Show system dialog on crash.
+  ::SetErrorMode(::GetErrorMode() & ~SEM_NOGPFAULTERRORBOX);
+#endif
 }
 
 bool RunLoop(node::Environment* env) {

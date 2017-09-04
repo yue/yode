@@ -21,10 +21,16 @@ class NodeIntegrationWin : public NodeIntegration {
   void PollEvents() override;
   void PostTask(const std::function<void()>& task) override;
 
-  static void CALLBACK OnTimer(HWND, UINT, UINT_PTR event, DWORD);
+  void OnTask(int id);
 
-  static CRITICAL_SECTION lock_;
-  static std::unordered_map<UINT_PTR, std::function<void()>> tasks_;
+  static LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wparam,
+                                  LPARAM lparam);
+
+  CRITICAL_SECTION lock_;
+
+  HWND message_window_;
+  int task_id_ = 0;
+  std::unordered_map<UINT_PTR, std::function<void()>> tasks_;
 
   DISALLOW_COPY_AND_ASSIGN(NodeIntegrationWin);
 };
