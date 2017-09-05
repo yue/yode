@@ -9,7 +9,7 @@
 
 namespace yode {
 
-void Init() {
+void Init(node::Environment* env) {
   gtk_init(nullptr, nullptr);
 }
 

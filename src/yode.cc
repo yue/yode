@@ -16,28 +16,32 @@ std::unique_ptr<NodeIntegration> g_node_integration;
 // Has we run message loop before.
 bool g_first_runloop = true;
 
+// Untility function to create a V8 string.
+inline v8::Local<v8::String> ToV8(node::Environment* env, const char* str) {
+  return v8::String::NewFromUtf8(
+      env->isolate(), str, v8::String::kNormalString);
+}
+
+// The fallback console logging.
+void Log(const v8::FunctionCallbackInfo<v8::Value>& args) {
+  for (int32_t i = 0; i < args.Length(); ++i) {
+    fprintf(stdout, *v8::String::Utf8Value(args[i]));
+  }
+}
+
 // Inject yode's version to process.versions.
-bool InjectYode(node::Environment* env) {
+bool InitWrapper(node::Environment* env) {
   // Initialize GUI after Node gets initialized.
-  Init();
-  // versions = process.versions
-  CHECK(!env->process_object().IsEmpty());
   v8::HandleScope handle_scope(env->isolate());
-  v8::MaybeLocal<v8::Value> key =
-      v8::String::NewFromUtf8(env->isolate(), "versions",
-                              v8::String::kNormalString);
-  v8::MaybeLocal<v8::Value> versions =
-      env->process_object()->Get(env->context(), key.ToLocalChecked());
-  CHECK(!versions.IsEmpty());
+  Init(env);
+  // process.log = Log
+  env->SetMethod(env->process_object(), "log", &Log);
+  // versions = process.versions
+  v8::Local<v8::Value> versions = env->process_object()->Get(
+      env->context(), ToV8(env, "versions")).ToLocalChecked();
   // versions.yode = v0.1.0
-  v8::MaybeLocal<v8::Value> yode =
-      v8::String::NewFromUtf8(env->isolate(), "yode",
-                              v8::String::kNormalString);
-  v8::MaybeLocal<v8::Value> version =
-      v8::String::NewFromUtf8(env->isolate(), "v0.1.0",
-                              v8::String::kNormalString);
-  versions.ToLocalChecked().As<v8::Object>()->Set(
-      env->context(), yode.ToLocalChecked(), version.ToLocalChecked());
+  versions.As<v8::Object>()->Set(
+      env->context(), ToV8(env, "yode"), ToV8(env, "v0.1.0"));
   return true;
 }
 
@@ -58,7 +62,7 @@ int Start(int argc, char* argv[]) {
   g_node_integration->Init();
 
   // Make Node use our message loop.
-  node::SetRunLoop(&InjectYode, &RunLoopWrapper);
+  node::SetRunLoop(&InitWrapper, &RunLoopWrapper);
 
   // Start node and enter message loop.
   int code = node::Start(argc, argv);

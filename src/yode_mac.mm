@@ -9,7 +9,7 @@
 
 namespace yode {
 
-void Init() {
+void Init(node::Environment* env) {
   [NSApplication sharedApplication];
   [NSApp setActivationPolicy:NSApplicationActivationPolicyRegular];
 }

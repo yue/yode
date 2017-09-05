@@ -7,7 +7,7 @@
 
 namespace yode {
 
-void Init() {
+void Init(node::Environment* env) {
 #if _DEBUG
   // Show system dialog on crash.
   ::SetErrorMode(::GetErrorMode() & ~SEM_NOGPFAULTERRORBOX);
