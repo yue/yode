@@ -7,6 +7,7 @@
 #include <string>
 #include <vector>
 
+#include "node/deps/uv/src/uv-common.h"
 #include "node/src/node.h"
 
 namespace yode {
@@ -76,6 +77,12 @@ void NodeIntegration::EmbedThreadRunner(void *arg) {
     // when this class is alive.
     self->PollEvents();
     if (self->embed_closed_)
+      break;
+
+    // Break the loop when uv has decided to quit.
+    if (self->uv_loop_->stop_flag != 0 ||
+        (!uv__has_active_handles(self->uv_loop_) &&
+         !uv__has_active_reqs(self->uv_loop_)))
       break;
 
     // Deal with event in main thread.
