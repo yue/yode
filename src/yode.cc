@@ -25,7 +25,7 @@ inline v8::Local<v8::String> ToV8(node::Environment* env, const char* str) {
 // The fallback console logging.
 void Log(const v8::FunctionCallbackInfo<v8::Value>& args) {
   for (int32_t i = 0; i < args.Length(); ++i) {
-    fprintf(stdout, *v8::String::Utf8Value(args[i]));
+    fprintf(stdout, "%s", *v8::String::Utf8Value(args[i]));
   }
 }
 
@@ -41,7 +41,7 @@ bool InitWrapper(node::Environment* env) {
       env->context(), ToV8(env, "versions")).ToLocalChecked();
   // versions.yode = v0.1.0
   versions.As<v8::Object>()->Set(
-      env->context(), ToV8(env, "yode"), ToV8(env, "v0.1.0"));
+      env->context(), ToV8(env, "yode"), ToV8(env, "v0.1.0")).ToChecked();
   return true;
 }
 
