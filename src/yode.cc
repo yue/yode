@@ -3,6 +3,9 @@
 
 #include "src/yode.h"
 
+#include <string.h>
+#include <stdlib.h>
+
 #include "node/src/env-inl.h"
 #include "src/node_integration.h"
 
@@ -57,12 +60,15 @@ bool RunLoopWrapper(node::Environment* env) {
 }  // namespace
 
 int Start(int argc, char* argv[]) {
-  // Prepare node integration.
-  g_node_integration.reset(NodeIntegration::Create());
-  g_node_integration->Init();
+  const char* run_as_node = getenv("YODE_RUN_AS_NODE");
+  if (!run_as_node || strcmp(run_as_node, "1")) {
+    // Prepare node integration.
+    g_node_integration.reset(NodeIntegration::Create());
+    g_node_integration->Init();
 
-  // Make Node use our message loop.
-  node::SetRunLoop(&InitWrapper, &RunLoopWrapper);
+    // Make Node use our message loop.
+    node::SetRunLoop(&InitWrapper, &RunLoopWrapper);
+  }
 
   // Start node and enter message loop.
   int code = node::Start(argc, argv);
