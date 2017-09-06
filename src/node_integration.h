@@ -48,8 +48,8 @@ class NodeIntegration {
   // Whether the libuv loop has ended.
   bool embed_closed_;
 
-  // Dummy handle to make uv's loop not quit.
-  uv_async_t dummy_uv_handle_;
+  // Handle to wake up uv's loop.
+  uv_async_t wakeup_handle_;
 
   // Thread for polling events.
   uv_thread_t embed_thread_;
