@@ -16,6 +16,7 @@ install:
   - cmd: SET PATH=C:\Program Files (x86)\MSBuild\14.0\bin\;%PATH%
   - cmd: SET PATH=C:\python27;%PATH%
   - cmd: node build.js %TARGET_ARCH%
+  - cmd: out\Release\yode.exe test.js
 
 # disable build and test pahses
 build: off

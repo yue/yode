@@ -68,3 +68,4 @@ before_install:
 
 script:
   - env CC=clang CXX=clang++ node build.js $TARGET_ARCH
+  - out/Release/yode test.js
