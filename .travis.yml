@@ -20,6 +20,7 @@ addons:
       - ubuntu-toolchain-r-test
       - sourceline: 'ppa:webkit-team/ppa'
     packages:
+      - xvfb
       - gcc-4.8-multilib
       - g++-4.8-multilib
       - gcc-arm-linux-gnueabihf
@@ -68,4 +69,9 @@ before_install:
 
 script:
   - env CC=clang CXX=clang++ node build.js $TARGET_ARCH
-  - out/Release/yode test.js
+  - if [[ "$TRAVIS_OS_NAME" == "linux" && "$TARGET_ARCH" == "x64" ]]; then
+      xvfb-run out/Release/yode test.js
+    fi
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
+      out/Release/yode test.js
+    fi
