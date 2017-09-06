@@ -38,7 +38,6 @@ void NodeIntegration::Init() {
 
   // Start worker that will interrupt main loop when having uv events.
   uv_sem_init(&embed_sem_, 0);
-  uv_unref(reinterpret_cast<uv_handle_t*>(&embed_sem_));
   uv_thread_create(&embed_thread_, EmbedThreadRunner, this);
 }
 
