@@ -3,6 +3,8 @@
 const fs = require('fs')
 const path = require('path')
 
+const version = 'v0.1.0'
+
 // Specify target_arch.
 let target_arch = 'x64'
 if (process.argv.length > 2)
@@ -37,3 +39,12 @@ execSync(`python node/tools/gyp/gyp_main.py yode.gyp -f ninja -Dhost_arch=x64 -D
 // Build.
 const epath = `${path.join('deps', 'ninja')}${path.delimiter}${process.env.PATH}`
 execSync(`ninja -C out/Release yode`, {env: {PATH: epath}})
+
+// Create zip.
+const JSZip = require('./deps/jszip')
+const zip = new JSZip()
+const distname = `yode-${version}-${process.platform}-${target_arch}.zip`
+const filename = process.platform == 'win32' ? 'yode.exe' : 'yode'
+zip.file(filename, fs.readFileSync(`out/Release/${filename}`))
+   .generateNodeStream({streamFiles:true})
+   .pipe(fs.createWriteStream(`out/Release/${distname}`))

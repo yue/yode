@@ -18,6 +18,23 @@ install:
   - cmd: node build.js %TARGET_ARCH%
   - cmd: out\Release\yode.exe test.js
 
+artifacts:
+  - path: 'out\Release\*.zip'
+
+deploy:
+  - provider: GitHub
+    release: Yode $(APPVEYOR_REPO_TAG_NAME)
+    tag: $(APPVEYOR_REPO_TAG_NAME)
+    description: '(placeholder)'
+    auth_token:
+      secure: A6p8IoStnodPh/lGnc41E+ACsYdyfOV3Z7K6H3w0Xz2SsLpL06AKb6PTNmMtWp1F
+    artifact: /.*\.zip/
+    draft: true
+    force_update: true
+    prerelease: false
+    on:
+      appveyor_repo_tag: true
+
 # disable build and test pahses
 build: off
 test: off
