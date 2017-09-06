@@ -42,9 +42,9 @@ bool InitWrapper(node::Environment* env) {
   // versions = process.versions
   v8::Local<v8::Value> versions = env->process_object()->Get(
       env->context(), ToV8(env, "versions")).ToLocalChecked();
-  // versions.yode = v0.1.0
+  // versions.yode = 0.1.0
   versions.As<v8::Object>()->Set(
-      env->context(), ToV8(env, "yode"), ToV8(env, "v0.1.0")).ToChecked();
+      env->context(), ToV8(env, "yode"), ToV8(env, "0.1.0")).ToChecked();
   return true;
 }
 
