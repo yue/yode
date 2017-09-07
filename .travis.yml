@@ -73,10 +73,10 @@ before_script:
 script:
   - env CC=clang CXX=clang++ node build.js $TARGET_ARCH
   - if [[ "$TRAVIS_OS_NAME" == "linux" && "$TARGET_ARCH" == "x64" ]]; then
-      xvfb-run out/Release/yode test.js
+      xvfb-run out/Release/yode test.js;
     fi
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
-      out/Release/yode test.js
+      out/Release/yode test.js;
     fi
 
 deploy:
