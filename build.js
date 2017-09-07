@@ -3,8 +3,6 @@
 const fs = require('fs')
 const path = require('path')
 
-const version = 'v0.1.0'
-
 // Specify target_arch.
 let target_arch = 'x64'
 if (process.argv.length > 2)
@@ -20,6 +18,9 @@ const execSync = (command, options = {}) => {
     options.env = Object.assign({}, process.env)
   return require('child_process').execSync(command, options)
 }
+
+// Current version.
+const version = String(execSync('git describe --always --tags', {stdio: null})).trim()
 
 // Sync submodule.
 execSync('git submodule sync --recursive', {stdio: null})
@@ -39,6 +40,13 @@ execSync(`python node/tools/gyp/gyp_main.py yode.gyp -f ninja -Dhost_arch=x64 -D
 // Build.
 const epath = `${path.join('deps', 'ninja')}${path.delimiter}${process.env.PATH}`
 execSync(`ninja -C out/Release yode`, {env: {PATH: epath}})
+
+// Remove old zip.
+const files = fs.readdirSync('out/Release')
+for (let f of files) {
+  if (f.endsWith('.zip'))
+    fs.unlinkSync(`out/Release/${f}`)
+}
 
 // Create zip.
 const JSZip = require('./deps/jszip')
