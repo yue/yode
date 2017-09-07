@@ -2,7 +2,7 @@
 
 // Run the tests defined in this file.
 if (require.main == module) {
-  require('./deps/mocha')
+  const Mocha = require('./deps/mocha')
   const mocha = new Mocha
   mocha.ui('bdd').reporter('tap')
   for (let member in require.cache)  // make require('test.js') work
