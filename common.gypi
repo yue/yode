@@ -86,7 +86,7 @@
           'node/deps/icu-small/source/tools/toolutil',
         ],
       }],
-      ['_target_name in ["libuv", "http_parser", "openssl", "openssl-cli", "cares", "node", "zlib", "mksnapshot", "genrb", "genccode"] or _target_name.startswith("v8") or _target_name.startswith("icu")', {
+      ['_target_name in ["libuv", "http_parser", "openssl", "openssl-cli", "cares", "node", "nghttp2", "zlib", "mksnapshot", "genrb", "genccode"] or _target_name.startswith("v8") or _target_name.startswith("icu")', {
         # Suppress all the warnings in Node.
         'msvs_settings': {
           'VCCLCompilerTool': {
@@ -95,6 +95,7 @@
         },
         'msvs_disabled_warnings': [
           4251,
+          4244,
         ],
         'xcode_settings': {
           'WARNING_CFLAGS': [

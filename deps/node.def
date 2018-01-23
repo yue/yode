@@ -10,6 +10,7 @@ EXPORTS
     _register_crypto
     _register_http_parser
     _register_fs
+    _register_module_wrap
     _register_os
     _register_serdes
     _register_url

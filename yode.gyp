@@ -76,6 +76,10 @@
               'SubSystem': '2',
             },
           },
+          'msvs_disabled_warnings': [
+            4251,
+            4244,
+          ],
         }],
         ['OS in "linux freebsd"', {
           'libraries': [
