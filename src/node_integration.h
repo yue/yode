@@ -7,7 +7,9 @@
 
 #include <functional>
 
+#include "node/deps/uv/include/uv.h"
 #include "node/src/node.h"
+#include "node/src/util.h"
 
 namespace yode {
 

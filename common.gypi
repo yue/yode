@@ -103,6 +103,7 @@
             '-Wno-switch',
             '-Wno-unused-function',
             '-Wno-sign-compare',
+            '-Wno-implicit-function-declaration',
           ],
           'WARNING_CFLAGS!': [
             '-W',
@@ -114,6 +115,7 @@
           '-Wno-switch',
           '-Wno-unused-function',
           '-Wno-sign-compare',
+          '-Wno-implicit-function-declaration',
         ],
         'cflags!': [
           '-Wall',
