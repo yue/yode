@@ -15,7 +15,7 @@ void Init(node::Environment* env) {
 
 bool RunLoop(node::Environment* env) {
   gtk_main();  // block until quit
-  return uv_run(env->event_loop(), UV_RUN_ONCE);
+  return uv_run(env->event_loop(), UV_RUN_DEFAULT);
 }
 
 }  // namespace yode
