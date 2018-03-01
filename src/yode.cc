@@ -11,6 +11,10 @@
 
 namespace yode {
 
+// Generated from js files.
+v8::Local<v8::String> MainSource(node::Environment* env);
+void DefineJavaScript(node::Environment* env, v8::Local<v8::Object> target);
+
 namespace {
 
 // The global instance of NodeIntegration.
@@ -42,10 +46,14 @@ bool InitWrapper(node::Environment* env) {
   // versions = process.versions
   v8::Local<v8::Value> versions = env->process_object()->Get(
       env->context(), ToV8(env, "versions")).ToLocalChecked();
-  // versions.yode = 0.1.0
+  // versions.yode = 0.3.0
   versions.As<v8::Object>()->Set(
-      env->context(), ToV8(env, "yode"), ToV8(env, "0.1.0")).ToChecked();
-  return true;
+      env->context(), ToV8(env, "yode"), ToV8(env, "0.3.0")).ToChecked();
+  // Inject asar support.
+  v8::ScriptOrigin origin(FIXED_ONE_BYTE_STRING(env->isolate(), "bootstrap.js"));
+  v8::MaybeLocal<v8::Script> script =
+      v8::Script::Compile(env->context(), MainSource(env), &origin);
+  return !script.ToLocalChecked()->Run(env->context()).IsEmpty();
 }
 
 // Run uv loop for once before entering GUI message loop.

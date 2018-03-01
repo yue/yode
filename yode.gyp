@@ -18,6 +18,7 @@
         'src/yode_linux.cc',
         'src/yode_mac.mm',
         'src/yode_win.cc',
+        '<(SHARED_INTERMEDIATE_DIR)/yode_javascript.cc',
       ],
       'include_dirs': [
         '.',
@@ -31,6 +32,7 @@
         'NODE_SHARED_MODE',
       ],
       'dependencies': [
+        'yode_js2c#host',
         'node/node.gyp:node',
         'node/deps/v8/src/v8.gyp:v8',
         'node/deps/v8/src/v8.gyp:v8_libplatform',
@@ -95,6 +97,31 @@
             '-Wl,--no-whole-archive',
           ],
         }],
+      ],
+    },
+    {
+      'target_name': 'yode_js2c',
+      'type': 'none',
+      'toolsets': ['host'],
+      'actions': [
+        {
+          'action_name': 'yode_js2c',
+          'process_outputs_as_sources': 1,
+          'inputs': [
+            'deps/js2c.py',
+            'src/asar.js',
+            'src/bootstrap.js',
+          ],
+          'outputs': [
+            '<(SHARED_INTERMEDIATE_DIR)/yode_javascript.cc',
+          ],
+          'action': [
+            'python',
+            'deps/js2c.py',
+            '<@(_outputs)',
+            '<@(_inputs)',
+          ],
+        },
       ],
     },
   ],
