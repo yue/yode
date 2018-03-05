@@ -1,7 +1,6 @@
-'use strict';
-
-(function bootstrap() {
-  console.log('bootstraping')
+(function bootstrap(NativeModule) {
+  // Turn our modules into built-in modules.
   let exports = this
-  global.bbb = exports
+  NativeModule._source.asar_archive = exports.asar_archive
+  NativeModule._source.pickle = exports.pickle
 })

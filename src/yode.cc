@@ -52,7 +52,8 @@ void Bootstrap(const v8::FunctionCallbackInfo<v8::Value>& args) {
   v8::Local<v8::Function> bootstrap =
       v8::Local<v8::Function>::Cast(result.ToLocalChecked());
   // Invoke the |bootstrap| with |exports|.
-  bootstrap->Call(env->context(), exports, 0, nullptr).IsEmpty();
+  v8::Local<v8::Value> native_module = args[0];
+  bootstrap->Call(env->context(), exports, 1, &native_module).IsEmpty();
 }
 
 // Inject yode's version to process.versions.

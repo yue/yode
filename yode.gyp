@@ -109,8 +109,9 @@
           'process_outputs_as_sources': 1,
           'inputs': [
             'deps/js2c.py',
-            'src/asar.js',
+            'src/asar_archive.js',
             'src/bootstrap.js',
+            'src/pickle.js',
           ],
           'outputs': [
             '<(SHARED_INTERMEDIATE_DIR)/yode_javascript.cc',
