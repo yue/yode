@@ -36,6 +36,25 @@ void Log(const v8::FunctionCallbackInfo<v8::Value>& args) {
   }
 }
 
+// Invoke our bootstrap script.
+void Bootstrap(const v8::FunctionCallbackInfo<v8::Value>& args) {
+  node::Environment* env = node::Environment::GetCurrent(args);
+  // Put our scripts into |exports|.
+  v8::Local<v8::Object> exports = v8::Object::New(env->isolate());
+  DefineJavaScript(env, exports);
+  // Get the |bootstrap| function.
+  v8::ScriptOrigin origin(
+      FIXED_ONE_BYTE_STRING(env->isolate(), "bootstrap.js"));
+  v8::MaybeLocal<v8::Script> script =
+      v8::Script::Compile(env->context(), MainSource(env), &origin);
+  v8::MaybeLocal<v8::Value> result =
+      script.ToLocalChecked()->Run(env->context());
+  v8::Local<v8::Function> bootstrap =
+      v8::Local<v8::Function>::Cast(result.ToLocalChecked());
+  // Invoke the |bootstrap| with |exports|.
+  bootstrap->Call(env->context(), exports, 0, nullptr).IsEmpty();
+}
+
 // Inject yode's version to process.versions.
 bool InitWrapper(node::Environment* env) {
   // Initialize GUI after Node gets initialized.
@@ -43,17 +62,15 @@ bool InitWrapper(node::Environment* env) {
   Init(env);
   // process.log = Log
   env->SetMethod(env->process_object(), "log", &Log);
+  // process.bootstrap = Bootstrap
+  env->SetMethod(env->process_object(), "bootstrap", &Bootstrap);
   // versions = process.versions
   v8::Local<v8::Value> versions = env->process_object()->Get(
       env->context(), ToV8(env, "versions")).ToLocalChecked();
   // versions.yode = 0.3.0
   versions.As<v8::Object>()->Set(
       env->context(), ToV8(env, "yode"), ToV8(env, "0.3.0")).ToChecked();
-  // Inject asar support.
-  v8::ScriptOrigin origin(FIXED_ONE_BYTE_STRING(env->isolate(), "bootstrap.js"));
-  v8::MaybeLocal<v8::Script> script =
-      v8::Script::Compile(env->context(), MainSource(env), &origin);
-  return !script.ToLocalChecked()->Run(env->context()).IsEmpty();
+  return true;
 }
 
 // Run uv loop for once before entering GUI message loop.
