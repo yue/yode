@@ -1,5 +1,6 @@
 const fs = require('fs')
 const path = require('path')
+const os = require('os')
 const Pickle = require('pickle')
 
 class AsarArchive {
@@ -23,6 +24,14 @@ class AsarArchive {
     } finally {
       fs.closeSync(fd)
     }
+
+    // Manage temprary files.
+    this.tmpFiles = {}
+    process.once('exit', () => {
+      for (name in this.tmpFiles) {
+        fs.unlinkSync(this.tmpFiles[name])
+      }
+    })
   }
 
   readExtendedMeta(fd, stats) {
@@ -41,9 +50,11 @@ class AsarArchive {
     this.contentOffset = stats.size - size
   }
 
-  getFileInfo(filePath) {
-    const components = path.normalize(filePath).split(path.sep)
+  getNode(filePath) {
     let node = this.header
+    if (filePath === '')
+      return node
+    const components = path.normalize(filePath).split(path.sep)
     while (components.length > 0) {
       const name = components.shift()
       if (name.length == 0)
@@ -53,14 +64,75 @@ class AsarArchive {
       else
         return null
     }
+    return node
+  }
+
+  getFileInfo(filePath) {
+    const node = this.getNode(filePath)
+    if (!node)
+      return null
     if (node.files)
       return null
     if (node.link)
       return this.getFileInfo(node.link)
     return {
       size: node.size,
-      offset: this.contentOffset + parseInt(node.offset)
+      offset: this.contentOffset + parseInt(node.offset),
+      unpacked: !!node.unpacked,
+      executable: !!node.executable,
     }
+  }
+
+  readFile(filePath, info) {
+    const buffer = Buffer.alloc(info.size)
+    const fd = fs.openSync(process.execPath, 'r')
+    try {
+      fs.readSync(fd, buffer, 0, info.size, info.offset)
+    } catch (e) {
+      return null
+    } finally {
+      fs.closeSync(fd)
+    }
+    return buffer
+  }
+
+  copyFileOut(filePath) {
+    if (this.tmpFiles[filePath]) {
+      return this.tmpFiles[filePath]
+    }
+    const info = this.getFileInfo(filePath)
+    if (!info)
+      return null
+    const tmpFile = path.join(os.tmpdir(), path.basename(filePath))
+    fs.writeFileSync(tmpFile, this.readFile(filePath, info))
+    this.tmpFiles[filePath] = tmpFile
+  }
+
+  stat(filePath) {
+    const node = this.getNode(filePath)
+    if (!node)
+      return null
+    return {
+      isFile: !node.files && !node.link,
+      isDirectory: !!node.files,
+      isLink: !!node.link,
+    }
+  }
+
+  realpath(filePath) {
+    const node = this.getNode(filePath)
+    if (!node)
+      return null
+    if (node.link)
+      return this.realpath(node.link)
+    return filePath
+  }
+
+  readdir(filePath) {
+    const node = this.getNode(filePath)
+    if (!node || !node.files)
+      return null
+    return Object.keys(node.files)
   }
 }
 

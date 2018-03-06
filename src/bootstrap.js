@@ -11,11 +11,15 @@
     process.asarArchive = new AsarArchive(process.execPath)
 
     // Monkey patch built-in modules.
-    NativeModule.require('asar_monkey_patch')
+    const fs = NativeModule.require('fs')
+    NativeModule.require('asar_monkey_patch').wrapFsWithAsar(fs)
 
-    // Redirect Node to execute from current ASAR archive.
-    process.argv.splice(1, 0, process.execPath)
+    // Redirect Node to execute from current ASAR archive, using a virtual
+    // "asar" directory as root.
+    const path = NativeModule.require('path')
+    process.argv.splice(1, 0, path.join(process.execPath, 'asar'))
   } catch (e) {
     // Not an ASAR archive, continue to Node's default routine.
+    console.log(e)
   }
 })
