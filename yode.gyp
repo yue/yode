@@ -110,6 +110,7 @@
           'inputs': [
             'deps/js2c.py',
             'src/asar_archive.js',
+            'src/asar_monkey_patch.js',
             'src/bootstrap.js',
             'src/pickle.js',
           ],
