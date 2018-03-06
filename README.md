@@ -35,11 +35,6 @@ correctly in Yode.
 $ node ./build.js [x64|ia32]
 ```
 
-## Contributions
-
-By sending a pull request, you are agreeing to transfer the copyright of your
-code to Cheng Zhao.
-
 ## License
 
 The MIT license.

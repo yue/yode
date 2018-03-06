@@ -106,6 +106,7 @@ class AsarArchive {
     const tmpFile = path.join(os.tmpdir(), path.basename(filePath))
     fs.writeFileSync(tmpFile, this.readFile(filePath, info))
     this.tmpFiles[filePath] = tmpFile
+    return tmpFile
   }
 
   stat(filePath) {
