@@ -27,12 +27,6 @@ class AsarArchive {
 
     // Manage temprary files.
     this.tmpFiles = {}
-    this.tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'asar-'))
-    process.once('exit', () => {
-      for (name in this.tmpFiles)
-        fs.unlinkSync(this.tmpFiles[name])
-      fs.rmdirSync(this.tmpDir)
-    })
   }
 
   readExtendedMeta(fd, stats) {
@@ -49,6 +43,18 @@ class AsarArchive {
     fs.readSync(fd, buffer, 0, 8, stats.size - 13)
     const size = buffer.readDoubleLE(0)
     this.contentOffset = stats.size - size
+  }
+
+  getTmpDir() {
+    if (this.tmpDir)
+      return this.tmpDir
+    this.tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'asar-'))
+    process.once('exit', () => {
+      for (const name in this.tmpFiles)
+        fs.unlinkSync(this.tmpFiles[name])
+      fs.rmdirSync(this.tmpDir)
+    })
+    return this.tmpDir
   }
 
   getNode(filePath) {
@@ -99,15 +105,12 @@ class AsarArchive {
     return buffer
   }
 
-  copyFileOut(filePath) {
+  copyFileOut(filePath, info) {
     if (this.tmpFiles[filePath])
       return this.tmpFiles[filePath]
-    const info = this.getFileInfo(filePath)
-    if (!info)
-      return null
     if (info.unpacked)
       return path.resolve(process.execPath, '..', '.unpacked', filePath)
-    const tmpFile = path.join(this.tmpDir, filePath.replace(/[\\\/]/g, '_'))
+    const tmpFile = path.join(this.getTmpDir(), filePath.replace(/[\\\/]/g, '_'))
     fs.writeFileSync(tmpFile, this.readFile(filePath, info))
     this.tmpFiles[filePath] = tmpFile
     return tmpFile

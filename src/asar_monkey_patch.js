@@ -105,9 +105,13 @@ function overrideAPISync(module, name, arg = 0) {
     if (!isAsar)
       return old.apply(this, arguments)
 
-    const newPath = process.asarArchive.copyFileOut(filePath)
+    const info = process.asarArchive.getFileInfo(filePath)
+    if (!info)
+      return notFoundError(filePath)
+
+    const newPath = process.asarArchive.copyFileOut(filePath, info)
     if (!newPath)
-      notFoundError(filePath)
+      return notFoundError(filePath)
 
     arguments[arg] = newPath
     return old.apply(this, arguments)
@@ -126,7 +130,11 @@ function overrideAPI(module, name, arg = 0) {
     if (typeof callback !== 'function')
       return overrideAPISync(module, name, arg)
 
-    const newPath = process.asarArchive.copyFileOut(filePath)
+    const info = process.asarArchive.getFileInfo(filePath)
+    if (!info)
+      return notFoundError(filePath, callback)
+
+    const newPath = process.asarArchive.copyFileOut(filePath, info)
     if (!newPath)
       return notFoundError(filePath, callback)
 
@@ -244,7 +252,7 @@ exports.wrapFsWithAsar = function(fs) {
     if (!info)
       return notFoundError(filePath, callback)
     if (info.unpacked) {
-      const realPath = process.asarArchive.copyFileOut(filePath)
+      const realPath = process.asarArchive.copyFileOut(filePath, info)
       return fs.access(realPath, mode, callback)
     }
     const stats = process.asarArchive.stat(filePath)
@@ -268,7 +276,7 @@ exports.wrapFsWithAsar = function(fs) {
     if (!info)
       notFoundError(filePath)
     if (info.unpacked) {
-      const realPath = process.asarArchive.copyFileOut(filePath)
+      const realPath = process.asarArchive.copyFileOut(filePath, info)
       return fs.accessSync(realPath, mode)
     }
     const stats = process.asarArchive.stat(filePath)
@@ -310,7 +318,7 @@ exports.wrapFsWithAsar = function(fs) {
       })
     }
     if (info.unpacked) {
-      const realPath = process.asarArchive.copyFileOut(filePath)
+      const realPath = process.asarArchive.copyFileOut(filePath, info)
       return fs.readFile(realPath, options, callback)
     }
 
@@ -342,7 +350,7 @@ exports.wrapFsWithAsar = function(fs) {
       }
     }
     if (info.unpacked) {
-      const realPath = process.asarArchive.copyFileOut(filePath)
+      const realPath = process.asarArchive.copyFileOut(filePath, info)
       return fs.readFileSync(realPath, options)
     }
     if (!options) {
@@ -401,7 +409,7 @@ exports.wrapFsWithAsar = function(fs) {
     if (info.size === 0)
       return ''
     if (info.unpacked) {
-      const realPath = process.asarArchive.copyFileOut(filePath)
+      const realPath = process.asarArchive.copyFileOut(filePath, info)
       return fs.readFileSync(realPath, {
         encoding: 'utf8'
       })
