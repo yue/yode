@@ -20,6 +20,5 @@
     process.argv.splice(1, 0, path.join(process.execPath, 'asar'))
   } catch (e) {
     // Not an ASAR archive, continue to Node's default routine.
-    console.log(e)
   }
 })

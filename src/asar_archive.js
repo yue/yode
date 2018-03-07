@@ -27,10 +27,11 @@ class AsarArchive {
 
     // Manage temprary files.
     this.tmpFiles = {}
+    this.tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'asar-'))
     process.once('exit', () => {
-      for (name in this.tmpFiles) {
+      for (name in this.tmpFiles)
         fs.unlinkSync(this.tmpFiles[name])
-      }
+      fs.rmdirSync(this.tmpDir)
     })
   }
 
@@ -97,13 +98,12 @@ class AsarArchive {
   }
 
   copyFileOut(filePath) {
-    if (this.tmpFiles[filePath]) {
+    if (this.tmpFiles[filePath])
       return this.tmpFiles[filePath]
-    }
     const info = this.getFileInfo(filePath)
     if (!info)
       return null
-    const tmpFile = path.join(os.tmpdir(), path.basename(filePath))
+    const tmpFile = path.join(this.tmpDir, filePath.replace(/[\\\/]/g, '_'))
     fs.writeFileSync(tmpFile, this.readFile(filePath, info))
     this.tmpFiles[filePath] = tmpFile
     return tmpFile

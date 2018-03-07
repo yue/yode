@@ -22,9 +22,11 @@ function splitPath(p) {
   // directory, which will cause problems in Node.js.
   p = path.normalize(p)
   const prefix = path.join(process.execPath, 'asar')
-  if (!p.startsWith(prefix))
+  if (p === prefix)
+    return [true, '']
+  if (!p.startsWith(prefix + path.sep))
     return [false]
-  return [true, p.substr(prefix.length)]
+  return [true, p.substr(prefix.length + 1)]
 }
 
 // Generate fake stats.
