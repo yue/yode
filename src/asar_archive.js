@@ -76,15 +76,17 @@ class AsarArchive {
       return null
     if (node.link)
       return this.getFileInfo(node.link)
-    return {
-      size: node.size,
-      offset: this.contentOffset + parseInt(node.offset),
-      unpacked: !!node.unpacked,
-      executable: !!node.executable,
-    }
+    const info = { size: node.size }
+    if (node.unpacked)
+      info.unpacked = true
+    else
+      info.offset = this.contentOffset + parseInt(node.offset)
+    return info
   }
 
   readFile(filePath, info) {
+    if (info.unpacked)
+      throw new Error('Should not use readFile for unpacked path')
     const buffer = Buffer.alloc(info.size)
     const fd = fs.openSync(process.execPath, 'r')
     try {
@@ -103,6 +105,8 @@ class AsarArchive {
     const info = this.getFileInfo(filePath)
     if (!info)
       return null
+    if (info.unpacked)
+      return path.resolve(process.execPath, '..', '.unpacked', filePath)
     const tmpFile = path.join(this.tmpDir, filePath.replace(/[\\\/]/g, '_'))
     fs.writeFileSync(tmpFile, this.readFile(filePath, info))
     this.tmpFiles[filePath] = tmpFile
