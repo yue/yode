@@ -49,10 +49,11 @@ for (let f of files) {
 }
 
 // Create zip.
-const JSZip = require('./deps/jszip')
-const zip = new JSZip()
+const yazl = require('./deps/yazl')
+const zip = new yazl.ZipFile()
 const distname = `yode-${version}-${process.platform}-${target_arch}.zip`
 const filename = process.platform == 'win32' ? 'yode.exe' : 'yode'
-zip.file(filename, fs.readFileSync(`out/Release/${filename}`))
-   .generateNodeStream({streamFiles:true})
-   .pipe(fs.createWriteStream(`out/Release/${distname}`))
+zip.addFile('node/LICENSE', 'LICENSE')
+zip.addFile(`out/Release/${filename}`, filename)
+zip.outputStream.pipe(fs.createWriteStream(`out/Release/${distname}`))
+zip.end()
