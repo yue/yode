@@ -10,6 +10,7 @@
 #include "node/deps/uv/src/uv-common.h"
 #include "node/src/env-inl.h"
 #include "node/src/node.h"
+#include "node/src/node_internals.h"
 
 namespace yode {
 
@@ -30,12 +31,17 @@ NodeIntegration::~NodeIntegration() {
   // Clear uv.
   uv_sem_destroy(&embed_sem_);
   uv_close(reinterpret_cast<uv_handle_t*>(&wakeup_handle_), nullptr);
+  uv_close(reinterpret_cast<uv_handle_t*>(&next_tick_handle_), nullptr);
 }
 
 void NodeIntegration::Init() {
-  // Handled used for waking up the uv loop in embed thread.
+  // Handle used for waking up the uv loop in embed thread.
+  // Note that we does not unref this handle to keep the active_handles > 0.
   uv_async_init(uv_loop_, &wakeup_handle_, nullptr);
-  uv_unref(reinterpret_cast<uv_handle_t*>(&wakeup_handle_));
+
+  // Handle used for invoking CallNextTick.
+  uv_async_init(uv_loop_, &next_tick_handle_, &OnCallNextTick);
+  uv_unref(reinterpret_cast<uv_handle_t*>(&next_tick_handle_));
 
   // Start worker that will interrupt main loop when having uv events.
   uv_sem_init(&embed_sem_, 0);
@@ -60,6 +66,14 @@ void NodeIntegration::UvRunOnce() {
 
   // Tell the worker thread to continue polling.
   uv_sem_post(&embed_sem_);
+}
+
+void NodeIntegration::CallNextTick() {
+  uv_async_send(&next_tick_handle_);
+}
+
+void NodeIntegration::ReleaseHandleRef() {
+  uv_unref(reinterpret_cast<uv_handle_t*>(&wakeup_handle_));
 }
 
 void NodeIntegration::WakeupMainThread() {
@@ -100,6 +114,23 @@ void NodeIntegration::EmbedThreadRunner(void *arg) {
     // Deal with event in main thread.
     self->WakeupMainThread();
   }
+}
+
+// static
+void NodeIntegration::OnCallNextTick(uv_async_t* handle) {
+  // Get current env.
+  v8::Isolate* isolate = v8::Isolate::GetCurrent();
+  v8::HandleScope handle_scope(isolate);
+  node::Environment* env = node::Environment::GetCurrent(isolate);
+  CHECK(env);
+
+  // The InternalCallbackScope can handle everything for us.
+  v8::Context::Scope context_scope(env->context());
+  node::InternalCallbackScope scope(
+      env,
+      v8::Local<v8::Object>(),
+      {0, 0},
+      node::InternalCallbackScope::kAllowEmptyResource);
 }
 
 }  // namespace yode

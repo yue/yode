@@ -13,9 +13,8 @@ void Init(node::Environment* env) {
   gtk_init(nullptr, nullptr);
 }
 
-bool RunLoop(node::Environment* env) {
+void RunLoop(node::Environment* env) {
   gtk_main();  // block until quit
-  return uv_run(env->event_loop(), UV_RUN_DEFAULT);
 }
 
 }  // namespace yode

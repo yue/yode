@@ -36,6 +36,11 @@ void Log(const v8::FunctionCallbackInfo<v8::Value>& args) {
   }
 }
 
+// Force running uv loop.
+void ActivateUvLoop(const v8::FunctionCallbackInfo<v8::Value>& args) {
+  g_node_integration->CallNextTick();
+}
+
 // Invoke our bootstrap script.
 void Bootstrap(const v8::FunctionCallbackInfo<v8::Value>& args) {
   node::Environment* env = node::Environment::GetCurrent(args);
@@ -61,10 +66,10 @@ bool InitWrapper(node::Environment* env) {
   // Initialize GUI after Node gets initialized.
   v8::HandleScope handle_scope(env->isolate());
   Init(env);
-  // process.log = Log
+  // Native methods.
   env->SetMethod(env->process_object(), "log", &Log);
-  // process.bootstrap = Bootstrap
   env->SetMethod(env->process_object(), "bootstrap", &Bootstrap);
+  env->SetMethod(env->process_object(), "activateUvLoop", &ActivateUvLoop);
   // versions = process.versions
   v8::Local<v8::Value> versions = env->process_object()->Get(
       env->context(), ToV8(env, "versions")).ToLocalChecked();
@@ -74,13 +79,18 @@ bool InitWrapper(node::Environment* env) {
   return true;
 }
 
-// Run uv loop for once before entering GUI message loop.
 bool RunLoopWrapper(node::Environment* env) {
+  // Run uv loop for once before entering GUI message loop.
   if (g_first_runloop) {
     g_node_integration->UvRunOnce();
     g_first_runloop = false;
   }
-  return RunLoop(env);
+  // Run GUI message loop.
+  RunLoop(env);
+  // No need to keep uv loop alive.
+  g_node_integration->ReleaseHandleRef();
+  // Enter uv loop to handle unfinished uv tasks.
+  return uv_run(env->event_loop(), UV_RUN_DEFAULT);
 }
 
 }  // namespace

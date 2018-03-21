@@ -19,7 +19,7 @@ int Start(int argc, char* argv[]);
 void Init(node::Environment* env);
 
 // Run the GUI message loop for once, implemented by different platforms.
-bool RunLoop(node::Environment* env);
+void RunLoop(node::Environment* env);
 
 }  // namespace yode
 

@@ -25,6 +25,12 @@ class NodeIntegration {
   // Run the libuv loop for once.
   void UvRunOnce();
 
+  // Handle the nextTick callbacks.
+  void CallNextTick();
+
+  // Release our ref to uv handle, so active handles count become 0.
+  void ReleaseHandleRef();
+
  protected:
   NodeIntegration();
 
@@ -45,13 +51,19 @@ class NodeIntegration {
 
  private:
   // Thread to poll uv events.
-  static void EmbedThreadRunner(void *arg);
+  static void EmbedThreadRunner(void* arg);
+
+  // Handle nextTick callbacks.
+  static void OnCallNextTick(uv_async_t* handle);
 
   // Whether the libuv loop has ended.
   bool embed_closed_;
 
   // Handle to wake up uv's loop.
   uv_async_t wakeup_handle_;
+
+  // Handle to call nextTick callbacks.
+  uv_async_t next_tick_handle_;
 
   // Thread for polling events.
   uv_thread_t embed_thread_;

@@ -14,13 +14,12 @@ void Init(node::Environment* env) {
 #endif
 }
 
-bool RunLoop(node::Environment* env) {
+void RunLoop(node::Environment* env) {
   MSG msg;
   while (::GetMessage(&msg, NULL, 0, 0)) {
     ::TranslateMessage(&msg);
     ::DispatchMessage(&msg);
   }
-  return uv_run(env->event_loop(), UV_RUN_DEFAULT);
 }
 
 }  // namespace yode

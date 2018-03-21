@@ -14,9 +14,8 @@ void Init(node::Environment* env) {
   [NSApp setActivationPolicy:NSApplicationActivationPolicyRegular];
 }
 
-bool RunLoop(node::Environment* env) {
+void RunLoop(node::Environment* env) {
   [NSApp run];  // block until quit
-  return uv_run(env->event_loop(), UV_RUN_DEFAULT);
 }
 
 }  // namespace yode
