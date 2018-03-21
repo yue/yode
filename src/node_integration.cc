@@ -8,6 +8,7 @@
 #include <vector>
 
 #include "node/deps/uv/src/uv-common.h"
+#include "node/src/env-inl.h"
 #include "node/src/node.h"
 
 namespace yode {
@@ -42,6 +43,18 @@ void NodeIntegration::Init() {
 }
 
 void NodeIntegration::UvRunOnce() {
+  // Get current env.
+  v8::Isolate* isolate = v8::Isolate::GetCurrent();
+  v8::HandleScope handle_scope(isolate);
+  node::Environment* env = node::Environment::GetCurrent(isolate);
+  CHECK(env);
+
+  // Enter node context while dealing with uv events.
+  v8::Context::Scope context_scope(env->context());
+
+  // Perform microtask checkpoint after running JavaScript.
+  v8::MicrotasksScope micro_scope(isolate, v8::MicrotasksScope::kRunMicrotasks);
+
   // Deal with uv events.
   uv_run(uv_loop_, UV_RUN_NOWAIT);
 
