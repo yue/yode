@@ -82,7 +82,7 @@ class AsarArchive {
       return null
     if (node.link)
       return this.getFileInfo(node.link)
-    const info = { size: node.size }
+    const info = { path: filePath, size: node.size }
     if (node.unpacked)
       info.unpacked = true
     else
@@ -90,7 +90,7 @@ class AsarArchive {
     return info
   }
 
-  readFile(filePath, info) {
+  readFile(info) {
     if (info.unpacked)
       throw new Error('Should not use readFile for unpacked path')
     const buffer = Buffer.alloc(info.size)
@@ -105,14 +105,14 @@ class AsarArchive {
     return buffer
   }
 
-  copyFileOut(filePath, info) {
-    if (this.tmpFiles[filePath])
-      return this.tmpFiles[filePath]
+  copyFileOut(info) {
+    if (this.tmpFiles[info.path])
+      return this.tmpFiles[info.path]
     if (info.unpacked)
-      return path.resolve(process.execPath, '..', 'res', filePath)
-    const tmpFile = path.join(this.getTmpDir(), filePath.replace(/[\\\/]/g, '_'))
-    fs.writeFileSync(tmpFile, this.readFile(filePath, info))
-    this.tmpFiles[filePath] = tmpFile
+      return path.resolve(process.execPath, '..', 'res', info.path)
+    const tmpFile = path.join(this.getTmpDir(), info.path.replace(/[\\\/]/g, '_'))
+    fs.writeFileSync(tmpFile, this.readFile(info.path, info))
+    this.tmpFiles[info.path] = tmpFile
     return tmpFile
   }
 
@@ -127,13 +127,10 @@ class AsarArchive {
     }
   }
 
-  realpath(filePath) {
-    const node = this.getNode(filePath)
-    if (!node)
-      return null
-    if (node.link)
-      return this.realpath(node.link)
-    return filePath
+  realpath(info) {
+    if (info.unpacked)
+      return path.resolve(process.execPath, '..', 'res', info.path)
+    return info.path
   }
 
   readdir(filePath) {
