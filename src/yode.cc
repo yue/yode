@@ -106,6 +106,9 @@ int Start(int argc, char* argv[]) {
     node::SetRunLoop(&InitWrapper, &RunLoopWrapper);
   }
 
+  // Always enable GC this app is almost always running on desktop.
+  v8::V8::SetFlagsFromString("--expose_gc", 11);
+
   // Start node and enter message loop.
   int code = node::Start(argc, argv);
 
