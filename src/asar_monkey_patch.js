@@ -1,6 +1,9 @@
 const childProcess = require('child_process')
 const path = require('path')
 
+// The root dir of asar archive.
+const rootDir = path._makeLong(path.join(process.execPath, 'asar'))
+
 // Convert asar archive's Stats object to fs's Stats object.
 let nextInode = 0
 
@@ -20,13 +23,12 @@ function splitPath(p) {
 
   // We inserted a virtual "asar" root directory to avoid treating execPath as
   // directory, which will cause problems in Node.js.
-  p = path.normalize(p)
-  const prefix = path.join(process.execPath, 'asar')
-  if (p === prefix)
+  p = path.normalize(path._makeLong(p))
+  if (p === rootDir)
     return [true, '']
-  if (!p.startsWith(prefix + path.sep))
+  if (!p.startsWith(rootDir + path.sep))
     return [false]
-  return [true, p.substr(prefix.length + 1)]
+  return [true, p.substr(rootDir.length + 1)]
 }
 
 // Generate fake stats.
