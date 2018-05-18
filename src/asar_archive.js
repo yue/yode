@@ -111,7 +111,7 @@ class AsarArchive {
     if (info.unpacked)
       return path.resolve(process.execPath, '..', 'res', info.path)
     const tmpFile = path.join(this.getTmpDir(), info.path.replace(/[\\\/]/g, '_'))
-    fs.writeFileSync(tmpFile, this.readFile(info.path, info))
+    fs.writeFileSync(tmpFile, this.readFile(info))
     this.tmpFiles[info.path] = tmpFile
     return tmpFile
   }
