@@ -46,14 +46,14 @@
     'V8_BASE': '',
     'v8_enable_i18n_support': '1',
     'v8_enable_inspector': '1',
-    'icu_data_file': 'icudt59l.dat',
-    'icu_data_in': '../../deps/icu-small/source/data/in/icudt59l.dat',
+    'icu_data_file': 'icudt60l.dat',
+    'icu_data_in': '../../deps/icu-small/source/data/in/icudt60l.dat',
     'icu_endianness': 'l',
     'icu_gyp_path': 'node/tools/icu/icu-generic.gyp',
     'icu_locales': 'en,root',
     'icu_path': '../../deps/icu-small',
     'icu_small': 'true',
-    'icu_ver_major': '59',
+    'icu_ver_major': '60',
   },
   'target_defaults': {
     'includes': [
