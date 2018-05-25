@@ -26,13 +26,8 @@ const version = String(execSync('git describe --always --tags', {stdio: null})).
 execSync('git submodule sync --recursive', {stdio: null})
 execSync('git submodule update --init --recursive', {stdio: null})
 
-// Usually dynamically generated, but we skipped Node's build script.
-const icu_config_gypi = 'node/icu_config.gypi'
-if (!fs.existsSync(icu_config_gypi))
-  execSync('python configure', {cwd: 'node'})
-const config_gypi = 'node/config.gypi'
-if (!fs.existsSync(config_gypi))
-  fs.writeFileSync(config_gypi, "\n{'variables':{}}")
+// Generate some dynamic gyp files.
+execSync('python configure', {cwd: 'node'})
 
 // Update the build configuration.
 execSync(`python node/tools/gyp/gyp_main.py yode.gyp -f ninja -Dhost_arch=x64 -Dtarget_arch=${target_arch} -Icommon.gypi --depth .`)

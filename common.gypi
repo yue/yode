@@ -17,7 +17,6 @@
     'debug_nghttp2': 0,
     'openssl_fips': '',
     'openssl_no_asm': 1,
-    'use_openssl_def': 0,
     'OPENSSL_PRODUCT': 'libopenssl.a',
     'node_release_urlbase': '',
     'node_byteorder': '<!(node -e "console.log(require(\'os\').endianness() === \'BE\' ? \'big\' : \'little\')")',
@@ -63,7 +62,7 @@
       'node/deps/v8/include',
     ],
     'target_conditions': [
-      ['_target_name=="node" and OS=="win"', {
+      ['_target_name=="node_lib" and OS=="win"', {
         # Force loading all objects of node, otherwise some built-in modules
         # won't load.
         'sources': [
@@ -78,7 +77,7 @@
           'U_STATIC_IMPLEMENTATION=1',
         ],
       }],
-      ['_target_name in ["node", "genrb", "genccode"] or _target_name.startswith("icu")', {
+      ['_target_name in ["node_lib", "genrb", "genccode"] or _target_name.startswith("icu")', {
         # Somehow Node's gyp files are not adding the include dirs.
         'include_dirs': [
           'node/deps/icu-small/source/common',
@@ -86,7 +85,7 @@
           'node/deps/icu-small/source/tools/toolutil',
         ],
       }],
-      ['_target_name in ["libuv", "http_parser", "openssl", "openssl-cli", "cares", "node", "nghttp2", "zlib", "mksnapshot", "genrb", "genccode"] or _target_name.startswith("v8") or _target_name.startswith("icu")', {
+      ['_target_name in ["libuv", "http_parser", "openssl", "openssl-cli", "cares", "node_lib", "nghttp2", "zlib", "mksnapshot", "genrb", "genccode"] or _target_name.startswith("v8") or _target_name.startswith("icu")', {
         # Suppress all the warnings in Node.
         'msvs_settings': {
           'VCCLCompilerTool': {
