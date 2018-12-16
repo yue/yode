@@ -1,6 +1,6 @@
 version: "{build}"
 
-os: Visual Studio 2015
+os: Visual Studio 2017
 
 init:
   - git config --global core.autocrlf input
@@ -12,7 +12,7 @@ environment:
     - TARGET_ARCH: ia32
 
 install:
-  - ps: Install-Product node 8
+  - ps: Install-Product node 10
   - cmd: SET PATH=C:\Program Files (x86)\MSBuild\14.0\bin\;%PATH%
   - cmd: SET PATH=C:\python27;%PATH%
   - cmd: node build.js %TARGET_ARCH%
