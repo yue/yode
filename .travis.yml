@@ -5,12 +5,12 @@ notifications:
 
 language: node_js
 node_js:
-  - "8"
+  - "10"
 compiler: clang
 os:
   - osx
   - linux
-osx_image: xcode8.3
+osx_image: xcode10.1
 dist: trusty
 sudo: required
 

@@ -35,8 +35,8 @@
       'dependencies': [
         'yode_js2c#host',
         'node/node.gyp:node_lib',
-        'node/deps/v8/src/v8.gyp:v8',
-        'node/deps/v8/src/v8.gyp:v8_libplatform',
+        'node/deps/v8/gypfiles/v8.gyp:v8',
+        'node/deps/v8/gypfiles/v8.gyp:v8_libplatform',
         'node/tools/icu/icu-generic.gyp:icui18n',
         'node/tools/icu/icu-generic.gyp:icuuc',
       ],

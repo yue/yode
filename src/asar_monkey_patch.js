@@ -409,11 +409,11 @@ exports.wrapFsWithAsar = function(fs) {
     return files
   }
 
-  const {internalModuleReadFile} = process.binding('fs')
-  process.binding('fs').internalModuleReadFile = function(p) {
+  const {internalModuleReadJSON} = process.binding('fs')
+  process.binding('fs').internalModuleReadJSON = function(p) {
     const [isAsar, filePath] = splitPath(p)
     if (!isAsar)
-      return internalModuleReadFile(p)
+      return internalModuleReadJSON(p)
     const info = process.asarArchive.getFileInfo(filePath)
     if (!info)
       return

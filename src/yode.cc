@@ -49,7 +49,7 @@ void Bootstrap(const v8::FunctionCallbackInfo<v8::Value>& args) {
   DefineJavaScript(env, exports);
   // Get the |bootstrap| function.
   v8::ScriptOrigin origin(
-      FIXED_ONE_BYTE_STRING(env->isolate(), "bootstrap.js"));
+      node::FIXED_ONE_BYTE_STRING(env->isolate(), "bootstrap.js"));
   v8::MaybeLocal<v8::Script> script =
       v8::Script::Compile(env->context(), MainSource(env), &origin);
   v8::MaybeLocal<v8::Value> result =
