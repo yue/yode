@@ -27,7 +27,7 @@ execSync('git submodule sync --recursive', {stdio: null})
 execSync('git submodule update --init --recursive', {stdio: null})
 
 // Generate some dynamic gyp files.
-execSync('python configure', {cwd: 'node'})
+execSync('python configure --openssl-no-asm', {cwd: 'node'})
 
 // Update the build configuration.
 execSync(`python node/tools/gyp/gyp_main.py yode.gyp -f ninja -Dhost_arch=x64 -Dtarget_arch=${target_arch} -Icommon.gypi --depth .`)
