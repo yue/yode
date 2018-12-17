@@ -94,7 +94,7 @@
           # Force loading all objects of node, otherwise some built-in modules
           # won't load.
           'ldflags': [
-            '-Wl,--whole-archive,<(OBJ_DIR)/node/libnode.a',
+            '-Wl,--whole-archive,<(obj_dir)/node/libnode.a',
             '-Wl,--no-whole-archive',
           ],
         }],
