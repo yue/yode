@@ -8,9 +8,7 @@ node_js:
   - "10"
 compiler: clang
 os:
-  - osx
   - linux
-osx_image: xcode10.1
 dist: trusty
 sudo: required
 

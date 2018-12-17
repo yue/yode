@@ -1,0 +1,33 @@
+steps:
+- task: NodeTool@0
+  inputs:
+    versionSpec: 10.x
+
+- task: UsePythonVersion@0
+  inputs:
+    versionSpec: '2.7'
+    architecture: 'x64'
+
+- script: node build.js $(TARGET_ARCH)
+  displayName: Build
+
+- script: out/Release/yode.exe test.js
+  displayName: Test
+
+- task: PublishBuildArtifacts@1
+  inputs:
+    pathtoPublish: 'out/Release/*.zip'
+
+- task: GithubRelease@0
+  displayName: Create GitHub Release
+  inputs:
+    gitHubConnection: GitHub Yue
+    repositoryName: yue/yode
+    action: edit
+    tagSource: auto
+    tag: $(Release.Tag)
+    title: Yode $(Release.Tag)
+    releaseNotes: (placeholder)
+    assets: 'out/Release/*.zip'
+    assetUploadMode: replace
+    isDraft: true
