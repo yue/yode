@@ -115,6 +115,9 @@
           '-Wno-switch',
           '-Wno-unused-function',
           '-Wno-sign-compare',
+          '-Wno-unused-but-set-variable',
+        ],
+        'cflags_c': [
           '-Wno-implicit-function-declaration',
         ],
         'cflags!': [
