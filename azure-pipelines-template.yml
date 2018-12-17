@@ -9,17 +9,15 @@ steps:
     architecture: 'x64'
 
 - script: node build.js $(TARGET_ARCH)
+  timeoutInMinutes: 120
   displayName: Build
 
-- script: out/Release/yode.exe test.js
+- script: out/Release/yode test.js
   displayName: Test
-
-- task: PublishBuildArtifacts@1
-  inputs:
-    pathtoPublish: 'out/Release/*.zip'
 
 - task: GithubRelease@0
   displayName: Create GitHub Release
+  condition: startsWith(variables['Release.Tag'], 'v')
   inputs:
     gitHubConnection: GitHub Yue
     repositoryName: yue/yode
