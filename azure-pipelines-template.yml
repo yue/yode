@@ -12,8 +12,13 @@ steps:
   timeoutInMinutes: 120
   displayName: Build
 
+- script: xvfb-run out/Release/yode test.js
+  displayName: Run tests with xvfb
+  condition: eq(variables['Agent.OS'], 'Linux')
+
 - script: out/Release/yode test.js
-  displayName: Test
+  displayName: Run tests
+  condition: ne(variables['Agent.OS'], 'Linux')
 
 - task: GithubRelease@0
   displayName: Create GitHub Release
