@@ -13,6 +13,8 @@ jobs:
   cancelTimeoutInMinutes: 120
   steps:
   - template: azure-pipelines-template.yml
+  - script: out\Release\yode.exe test.js
+    displayName: Run tests
 
 - job: macos_build
   displayName: 'Build for macOS'
@@ -24,6 +26,8 @@ jobs:
         TARGET_ARCH: x64
   steps:
   - template: azure-pipelines-template.yml
+  - script: out/Release/yode test.js
+    displayName: Run tests
 
 - job: linux_build
   displayName: 'Build for Linux'
@@ -39,3 +43,5 @@ jobs:
       sudo apt-get install -y libgtk-3-dev
     displayName: Install dependencies
   - template: azure-pipelines-template.yml
+  - script: xvfb-run out/Release/yode test.js
+    displayName: Run tests
