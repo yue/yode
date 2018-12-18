@@ -30,6 +30,7 @@ steps:
     tagSource: auto
     tag: $(Tag.Name)
     title: Yode $(Tag.name)
+    releaseNotesSource: input
     releaseNotes: (placeholder)
     assets: 'out/Release/*.zip'
     assetUploadMode: replace
