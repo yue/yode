@@ -12,17 +12,26 @@ steps:
   timeoutInMinutes: 120
   displayName: Build
 
+- bash: |
+    BRANCH=$(Build.SourceBranch)
+    TAG=${BRANCH:10}
+    echo "##vso[task.setvariable variable=Name;isOutput=true]$TAG"
+  displayName: Get Tag Name
+  name: Tag
+  condition: startsWith(variables['Build.SourceBranch'], 'refs/tags/')
+
 - task: GithubRelease@0
   displayName: Create GitHub Release
-  condition: startsWith(variables['Build.SourceBranch'], 'refs/tags/v')
+  condition: startsWith(variables['Tag.Name'], 'v')
   inputs:
     gitHubConnection: GitHub Yue
     repositoryName: yue/yode
-    action: create
+    action: Edit
     tagSource: auto
-    tag: $(Release.Tag)
-    title: Yode $(Release.Tag)
+    tag: $(Tag.Name)
+    title: Yode $(Tag.name)
     releaseNotes: (placeholder)
     assets: 'out/Release/*.zip'
     assetUploadMode: replace
     isDraft: true
+    addChangelog: false
