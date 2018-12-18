@@ -1,3 +1,8 @@
+trigger:
+- refs/heads/*
+- refs/pull/*/merge
+- refs/tags/*
+
 jobs:
 - job: windows_build
   displayName: 'Build for Windows'

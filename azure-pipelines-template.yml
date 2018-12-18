@@ -14,11 +14,11 @@ steps:
 
 - task: GithubRelease@0
   displayName: Create GitHub Release
-  condition: startsWith(variables['Release.Tag'], 'v')
+  condition: startsWith(variables['Build.SourceBranch'], 'refs/tags/v')
   inputs:
     gitHubConnection: GitHub Yue
     repositoryName: yue/yode
-    action: edit
+    action: create
     tagSource: auto
     tag: $(Release.Tag)
     title: Yode $(Release.Tag)
