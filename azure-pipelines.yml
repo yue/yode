@@ -12,8 +12,8 @@ jobs:
     matrix:
       x64:
         TARGET_ARCH: x64
-      x86:
-        TARGET_ARCH: x86
+      ia32:
+        TARGET_ARCH: ia32
   timeoutInMinutes: 120
   cancelTimeoutInMinutes: 120
   steps:

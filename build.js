@@ -30,8 +30,7 @@ execSync('git submodule update --init --recursive', {stdio: null})
 execSync(`python configure --openssl-no-asm --dest-cpu=${target_arch}`, {cwd: 'node'})
 
 // Update the build configuration.
-const gyp_arch = target_arch === 'x86' ? 'ia32' : target_arch
-execSync(`python node/tools/gyp/gyp_main.py yode.gyp -f ninja -Dhost_arch=x64 -Dtarget_arch=${gyp_arch} -Icommon.gypi --depth .`)
+execSync(`python node/tools/gyp/gyp_main.py yode.gyp -f ninja -Dhost_arch=x64 -Dtarget_arch=${target_arch} -Icommon.gypi --depth .`)
 
 // Build.
 const epath = `${path.join('deps', 'ninja')}${path.delimiter}${process.env.PATH}`
