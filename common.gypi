@@ -46,7 +46,7 @@
     'node_enable_d8': 'false',
     'node_use_large_pages': 'false',
     'node_debug_lib': 'false',
-    'node_with_ltcg': 'true',
+    'node_with_ltcg': 'false',
     'uv_library': 'static_library',
     'uv_parent_path': 'node/deps/uv',
     'uv_use_dtrace': 'false',
