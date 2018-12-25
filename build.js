@@ -36,6 +36,9 @@ execSync(`python node/tools/gyp/gyp_main.py yode.gyp -f ninja -Dhost_arch=x64 -D
 const epath = `${path.join('deps', 'ninja')}${path.delimiter}${process.env.PATH}`
 execSync(`ninja -C out/Release yode`, {env: {PATH: epath}})
 
+if (process.platform === 'linux')
+  execSync('strip out/Release/yode')
+
 // Remove old zip.
 const files = fs.readdirSync('out/Release')
 for (let f of files) {
