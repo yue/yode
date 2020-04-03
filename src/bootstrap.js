@@ -11,33 +11,66 @@ function wrapWithActivateUvLoop(func) {
   }
 }
 
-(function bootstrap(NativeModule) {
+(function bootstrap(process, global, internalRequire, execPath) {
+  delete process.bootstrap
+
+  // The |require| here is actually |nativeModuleRequire|.
+  const {NativeModule, internalBinding, require} = internalRequire('internal/bootstrap/loaders')
+
   // Make async method work.
-  const timers = NativeModule.require('timers')
+  const timers = require('timers')
   process.nextTick = wrapWithActivateUvLoop(process.nextTick)
   global.setImmediate = wrapWithActivateUvLoop(timers.setImmediate)
   global.setTimeout = wrapWithActivateUvLoop(timers.setTimeout)
   global.setInterval = wrapWithActivateUvLoop(timers.setInterval)
 
+  // Wrap the source code like Module.wrapSafe.
+  const {compileFunction} = internalBinding('contextify')
+  function wrapSafe(filename, content) {
+    const compiled = compileFunction(
+      content, filename, 0, 0, undefined, false, undefined, [],
+      [ 'exports', 'require', 'module', '__filename', '__dirname', 'execPath' ])
+    return compiled.function
+  }
+
+  // Implemented to be loaded by nativeModuleRequire.
+  class YodeModule {
+    constructor(id, source) {
+      this.id = id
+      this.source = source
+    }
+
+    compileForInternalLoader() {
+      if (!this.exports) {
+        this.exports = {}
+        const filename = this.id + '.js'
+        const compiledWrapper = wrapSafe(filename, this.source)
+        compiledWrapper.call(this.exports, this.exports, require, this, filename, '', execPath);
+      }
+      return this.exports
+    }
+  }
+
   // Turn our modules into built-in modules.
-  const exports = this
-  NativeModule._source.asar_archive = exports.asar_archive
-  NativeModule._source.asar_monkey_patch = exports.asar_monkey_patch
-  NativeModule._source.pickle = exports.pickle
+  for (const id in this)
+    NativeModule.map.set(id, new YodeModule(id, this[id], require))
 
   try {
     // Is the executable concatenated with ASAR archive?
-    const AsarArchive = NativeModule.require('asar_archive')
-    process.asarArchive = new AsarArchive(process.execPath)
+    const AsarArchive = require('asar_archive')
+    process.asarArchive = new AsarArchive(execPath)
 
-    // Monkey patch built-in modules.
-    const fs = NativeModule.require('fs')
-    NativeModule.require('asar_monkey_patch').wrapFsWithAsar(fs)
+    // If it is (i.e. no exception), then patch the fs module after bootstrap
+    // is over.
+    process.finishBootstrap = () => {
+      delete process.finishBootstrap
+      // Monkey patch built-in modules.
+      require('asar_monkey_patch').wrapFsWithAsar(require('fs'))
+    }
 
     // Redirect Node to execute from current ASAR archive, using a virtual
     // "asar" directory as root.
-    const path = NativeModule.require('path')
-    process.argv.splice(1, 0, path.join(process.execPath, 'asar'))
+    return require('path').join(execPath, 'asar')
   } catch (e) {
     // Not an ASAR archive, continue to Node's default routine.
   }

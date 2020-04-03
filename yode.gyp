@@ -4,6 +4,8 @@
       'target_name': 'yode',
       'type': 'executable',
       'sources': [
+        'node/src/node_code_cache_stub.cc',
+        'node/src/node_snapshot_stub.cc',
         'src/main.cc',
         'src/node_integration.cc',
         'src/node_integration.h',
@@ -34,9 +36,9 @@
       ],
       'dependencies': [
         'yode_js2c#host',
-        'node/node.gyp:node_lib',
-        'node/deps/v8/gypfiles/v8.gyp:v8',
-        'node/deps/v8/gypfiles/v8.gyp:v8_libplatform',
+        'node/node.gyp:libnode',
+        'node/tools/v8_gypfiles/v8.gyp:v8',
+        'node/tools/v8_gypfiles/v8.gyp:v8_libplatform',
         'node/tools/icu/icu-generic.gyp:icui18n',
         'node/tools/icu/icu-generic.gyp:icuuc',
       ],
@@ -65,6 +67,10 @@
             'src/yode.rc',
             'deps/node.def',
           ],
+          'libraries': [
+            'dbghelp.lib',
+            'winmm.lib',
+          ],
           'msvs_settings': {
             'VCManifestTool': {
               # Manifest file.
@@ -77,11 +83,15 @@
               'MinimumRequiredVersion': '5.02',
               # A win32 GUI program.
               'SubSystem': '2',
+              # Defined in node target, required for building x86.
+              'ImageHasSafeExceptionHandlers': 'false',
             },
           },
           'msvs_disabled_warnings': [
+            4003,
             4251,
             4244,
+            4996,
           ],
         }],
         ['OS in "linux freebsd"', {

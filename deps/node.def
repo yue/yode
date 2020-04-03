@@ -23,7 +23,6 @@ EXPORTS
     _register_spawn_sync
     _register_stream_wrap
     _register_tcp_wrap
-    _register_timer_wrap
     _register_tls_wrap
     _register_tty_wrap
     _register_udp_wrap

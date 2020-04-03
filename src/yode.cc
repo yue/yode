@@ -26,13 +26,13 @@ bool g_first_runloop = true;
 // Untility function to create a V8 string.
 inline v8::Local<v8::String> ToV8(node::Environment* env, const char* str) {
   return v8::String::NewFromUtf8(
-      env->isolate(), str, v8::String::kNormalString);
+      env->isolate(), str, v8::NewStringType::kNormal).ToLocalChecked();
 }
 
 // The fallback console logging.
 void Log(const v8::FunctionCallbackInfo<v8::Value>& args) {
   for (int32_t i = 0; i < args.Length(); ++i) {
-    fprintf(stdout, "%s", *v8::String::Utf8Value(args[i]));
+    fprintf(stdout, "%s", *v8::String::Utf8Value(args.GetIsolate(), args[i]));
   }
 }
 
@@ -57,8 +57,20 @@ void Bootstrap(const v8::FunctionCallbackInfo<v8::Value>& args) {
   v8::Local<v8::Function> bootstrap =
       v8::Local<v8::Function>::Cast(result.ToLocalChecked());
   // Invoke the |bootstrap| with |exports|.
-  v8::Local<v8::Value> native_module = args[0];
-  bootstrap->Call(env->context(), exports, 1, &native_module).IsEmpty();
+  std::vector<v8::Local<v8::Value>> bootstrap_args(args.Length());
+  for (int i = 0; i < args.Length(); ++i)
+    bootstrap_args[i] = args[i];
+  bootstrap_args.push_back(ToV8(env, env->exec_path().c_str()));
+  v8::MaybeLocal<v8::Value> ret =
+      bootstrap->Call(env->context(), exports,
+                      bootstrap_args.size(), bootstrap_args.data());
+  // Change process.argv if the binary starts itself.
+  v8::Local<v8::Value> r;
+  if (ret.ToLocal(&r) && r->IsString()) {
+    const char* p = *v8::String::Utf8Value(env->isolate(), r);
+    auto& argv = const_cast<std::vector<std::string>&>(env->argv());
+    argv.insert(++argv.begin(), p);
+  }
 }
 
 // Inject yode's version to process.versions.
@@ -70,12 +82,13 @@ bool InitWrapper(node::Environment* env) {
   env->SetMethod(env->process_object(), "log", &Log);
   env->SetMethod(env->process_object(), "bootstrap", &Bootstrap);
   env->SetMethod(env->process_object(), "activateUvLoop", &ActivateUvLoop);
-  // versions = process.versions
+  // versions.yode = 0.4.2
   v8::Local<v8::Value> versions = env->process_object()->Get(
       env->context(), ToV8(env, "versions")).ToLocalChecked();
-  // versions.yode = 0.4.2
   versions.As<v8::Object>()->Set(
       env->context(), ToV8(env, "yode"), ToV8(env, "0.4.2")).ToChecked();
+  env->process_object()->DefineOwnProperty(
+      env->context(), ToV8(env, "versions"), versions, v8::ReadOnly).Check();
   return true;
 }
 

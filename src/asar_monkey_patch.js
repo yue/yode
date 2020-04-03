@@ -2,7 +2,7 @@ const childProcess = require('child_process')
 const path = require('path')
 
 // The root dir of asar archive.
-const rootDir = path._makeLong(path.join(process.execPath, 'asar'))
+const rootDir = path._makeLong(path.join(execPath, 'asar'))
 
 // Convert asar archive's Stats object to fs's Stats object.
 let nextInode = 0
@@ -203,7 +203,7 @@ exports.wrapFsWithAsar = function(fs) {
     if (info.unpacked)
       return real
     else
-      return path.join(realpathSync(process.execPath), 'asar', real)
+      return path.join(realpathSync(execPath), 'asar', real)
   }
 
   const {realpath} = fs
@@ -222,7 +222,7 @@ exports.wrapFsWithAsar = function(fs) {
     if (info.unpacked) {
       callback(null, real)
     } else {
-      realpath(process.execPath, function(err, p) {
+      realpath(execPath, function(err, p) {
         if (err)
           return callback(err)
         return callback(null, path.join(p, 'asar', real))
@@ -334,7 +334,7 @@ exports.wrapFsWithAsar = function(fs) {
     }
 
     const buffer = Buffer.alloc(info.size)
-    fs.open(process.execPath, 'r', function(error, fd) {
+    fs.open(execPath, 'r', function(error, fd) {
       if (error)
         return callback(error)
       fs.read(fd, buffer, 0, info.size, info.offset, function(error) {
