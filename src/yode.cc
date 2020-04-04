@@ -82,11 +82,11 @@ bool InitWrapper(node::Environment* env) {
   env->SetMethod(env->process_object(), "log", &Log);
   env->SetMethod(env->process_object(), "bootstrap", &Bootstrap);
   env->SetMethod(env->process_object(), "activateUvLoop", &ActivateUvLoop);
-  // versions.yode = 0.4.2
+  // versions.yode = 0.5.0
   v8::Local<v8::Value> versions = env->process_object()->Get(
       env->context(), ToV8(env, "versions")).ToLocalChecked();
   versions.As<v8::Object>()->Set(
-      env->context(), ToV8(env, "yode"), ToV8(env, "0.4.2")).ToChecked();
+      env->context(), ToV8(env, "yode"), ToV8(env, "0.5.0")).ToChecked();
   env->process_object()->DefineOwnProperty(
       env->context(), ToV8(env, "versions"), versions, v8::ReadOnly).Check();
   return true;
