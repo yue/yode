@@ -67,9 +67,8 @@ void Bootstrap(const v8::FunctionCallbackInfo<v8::Value>& args) {
   // Change process.argv if the binary starts itself.
   v8::Local<v8::Value> r;
   if (ret.ToLocal(&r) && r->IsString()) {
-    const char* p = *v8::String::Utf8Value(env->isolate(), r);
     auto& argv = const_cast<std::vector<std::string>&>(env->argv());
-    argv.insert(++argv.begin(), p);
+    argv.insert(++argv.begin(), *v8::String::Utf8Value(env->isolate(), r));
   }
 }
 
