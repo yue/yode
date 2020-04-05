@@ -75,6 +75,8 @@ void Bootstrap(const v8::FunctionCallbackInfo<v8::Value>& args) {
 
 // Inject yode's version to process.versions.
 bool InitWrapper(node::Environment* env) {
+  // Set MicrotasksPolicy to Auto otherwise microtasks won't run.
+  env->isolate()->SetMicrotasksPolicy(v8::MicrotasksPolicy::kAuto);
   // Initialize GUI after Node gets initialized.
   v8::HandleScope handle_scope(env->isolate());
   Init(env);
