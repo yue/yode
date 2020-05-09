@@ -2,6 +2,7 @@
 
 const fs = require('fs')
 const path = require('path')
+const os = require('os')
 
 // Specify target_arch.
 let target_arch = 'x64'
@@ -34,7 +35,7 @@ execSync(`python node/tools/gyp/gyp_main.py yode.gyp -f ninja -Dhost_arch=x64 -D
 
 // Build.
 const epath = `${path.join('deps', 'ninja')}${path.delimiter}${process.env.PATH}`
-execSync(`ninja -C out/Release yode`, {env: {PATH: epath}})
+execSync(`ninja -j ${os.cpus().length} -C out/Release yode`, {env: {PATH: epath}})
 
 if (process.platform === 'linux')
   execSync('strip out/Release/yode')
