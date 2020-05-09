@@ -130,7 +130,7 @@ void NodeIntegration::OnCallNextTick(uv_async_t* handle) {
       env,
       v8::Local<v8::Object>(),
       {0, 0},
-      node::InternalCallbackScope::kAllowEmptyResource);
+      node::InternalCallbackScope::kNoFlags);
 }
 
 }  // namespace yode
