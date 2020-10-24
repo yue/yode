@@ -59,7 +59,7 @@ void NodeIntegration::UvRunOnce() {
   v8::Context::Scope context_scope(env->context());
 
   // Perform microtask checkpoint after running JavaScript.
-  v8::MicrotasksScope micro_scope(isolate, v8::MicrotasksScope::kRunMicrotasks);
+  v8::MicrotasksScope::PerformCheckpoint(isolate);
 
   // Deal with uv events.
   uv_run(uv_loop_, UV_RUN_NOWAIT);

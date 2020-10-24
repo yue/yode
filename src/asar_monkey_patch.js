@@ -428,7 +428,8 @@ exports.wrapFsWithAsar = function(fs) {
     const buffer = process.asarArchive.readFile(info)
     if (!buffer)
       return notFoundError(filePath)
-    return buffer.toString('utf8')
+    const str = buffer.toString('utf8')
+    return [str, str.length > 0]
   }
 
   const {internalModuleStat} = process.binding('fs')

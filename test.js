@@ -22,6 +22,12 @@ describe('property', function() {
       assert.equal(typeof process.versions.yode, 'string')
     })
   })
+
+  describe('process.bootstrap', function() {
+    it('should be deleted', function() {
+      assert.equal(process.bootstrap, undefined)
+    })
+  })
 })
 
 describe('node', function() {
@@ -32,6 +38,23 @@ describe('node', function() {
           done()
         })
       }, 0)
+    })
+  })
+
+  it('file stream should work', function(done) {
+    const stream = fs.createReadStream(process.execPath)
+    stream.on('data', () => {})
+    stream.on('end', () => {
+      done()
+    })
+  })
+
+  it('network stream should work', function(done) {
+    require('https').get('https://google.com', (res) => {
+      res.on('data', () => {})
+      res.on('end', () => {
+        done()
+      })
     })
   })
 
@@ -67,5 +90,9 @@ describe('node', function() {
       assert.equal(code, 123)
       done()
     })
+  })
+
+  it('Promise can resolve', async () => {
+    await new Promise(resolve => setTimeout(resolve, 100))
   })
 })

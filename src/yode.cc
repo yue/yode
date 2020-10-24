@@ -29,13 +29,6 @@ inline v8::Local<v8::String> ToV8(node::Environment* env, const char* str) {
       env->isolate(), str, v8::NewStringType::kNormal).ToLocalChecked();
 }
 
-// The fallback console logging.
-void Log(const v8::FunctionCallbackInfo<v8::Value>& args) {
-  for (int32_t i = 0; i < args.Length(); ++i) {
-    fprintf(stdout, "%s", *v8::String::Utf8Value(args.GetIsolate(), args[i]));
-  }
-}
-
 // Force running uv loop.
 void ActivateUvLoop(const v8::FunctionCallbackInfo<v8::Value>& args) {
   g_node_integration->CallNextTick();
@@ -44,6 +37,10 @@ void ActivateUvLoop(const v8::FunctionCallbackInfo<v8::Value>& args) {
 // Invoke our bootstrap script.
 void Bootstrap(const v8::FunctionCallbackInfo<v8::Value>& args) {
   node::Environment* env = node::Environment::GetCurrent(args);
+  CHECK(env);
+  // Initialize GUI after Node gets initialized.
+  v8::HandleScope handle_scope(env->isolate());
+  Init(env);
   // Put our scripts into |exports|.
   v8::Local<v8::Object> exports = v8::Object::New(env->isolate());
   DefineJavaScript(env, exports);
@@ -72,15 +69,9 @@ void Bootstrap(const v8::FunctionCallbackInfo<v8::Value>& args) {
   }
 }
 
-// Inject yode's version to process.versions.
+// Inject custom bindings.
 bool InitWrapper(node::Environment* env) {
-  // Set MicrotasksPolicy to Auto otherwise microtasks won't run.
-  env->isolate()->SetMicrotasksPolicy(v8::MicrotasksPolicy::kAuto);
-  // Initialize GUI after Node gets initialized.
-  v8::HandleScope handle_scope(env->isolate());
-  Init(env);
   // Native methods.
-  env->SetMethod(env->process_object(), "log", &Log);
   env->SetMethod(env->process_object(), "bootstrap", &Bootstrap);
   env->SetMethod(env->process_object(), "activateUvLoop", &ActivateUvLoop);
   // versions.yode = 0.6.0
