@@ -78,6 +78,34 @@ describe('node', function() {
     })
   })
 
+  it('start with asar', function(done) {
+    const a = path.join(__dirname, 'deps', 'app.asar')
+    const p = path.join(require('os').tmpdir(), 'asar-test-' + path.basename(process.execPath))
+    fs.writeFileSync(p, fs.readFileSync(process.execPath))
+    fs.appendFileSync(p, fs.readFileSync(a))
+    fs.chmodSync(p, 0o755)
+
+    let output = ''
+    const child = require('child_process').exec(p)
+    child.stdout.on('data', (chunk) => {
+      output += String(chunk)
+    })
+    child.stderr.on('data', (chunk) => {
+      output += String(chunk)
+    })
+    child.on('exit', (code) => {
+      if (code == 0) {
+        fs.unlinkSync(p)
+      } else {
+        console.log(p)
+        console.log(output)
+      }
+      assert.equal(code, 0)
+      assert.ok(String(fs.readFileSync(a)).includes(output))
+      done()
+    })
+  })
+
   it('process can quit', function(done) {
     const p = path.join(require('os').tmpdir(), 'yode-exit.js')
     fs.writeFileSync(p, "process.exit(123)")

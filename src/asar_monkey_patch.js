@@ -416,18 +416,16 @@ exports.wrapFsWithAsar = function(fs) {
       return internalModuleReadJSON(p)
     const info = process.asarArchive.getFileInfo(filePath)
     if (!info)
-      return
+      return []
     if (info.size === 0)
-      return ''
+      return []
     if (info.unpacked) {
       const realPath = process.asarArchive.copyFileOut(info)
-      return fs.readFileSync(realPath, {
-        encoding: 'utf8'
-      })
+      return [fs.readFileSync(realPath, {encoding: 'utf8'}), true]
     }
     const buffer = process.asarArchive.readFile(info)
     if (!buffer)
-      return notFoundError(filePath)
+      return []
     const str = buffer.toString('utf8')
     return [str, str.length > 0]
   }
