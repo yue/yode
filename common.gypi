@@ -19,6 +19,7 @@
     'enable_lto': 'false',
     'enable_pgo_generate': 'false',
     'enable_pgo_use': 'false',
+    'experimental_quic': 'false',
     'force_dynamic_crt': 0,
     'host_arch': 'x64',
     'openssl_fips': '',
