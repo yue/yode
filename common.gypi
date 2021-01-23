@@ -71,15 +71,15 @@
     'v8_use_siphash': 1,
     'v8_use_snapshot': 1,
     'want_separate_host_toolset': 1,
-    'icu_data_file': 'icudt67l.dat',
-    'icu_data_in': '../../deps/icu-tmp/icudt67l.dat',
+    'icu_data_file': 'icudt68l.dat',
+    'icu_data_in': '../../deps/icu-tmp/icudt68l.dat',
     'icu_default_data': '',
     'icu_endianness': 'l',
     'icu_gyp_path': 'node/tools/icu/icu-generic.gyp',
     'icu_locales': 'en,root',
     'icu_path': '../../deps/icu-small',
     'icu_small': 'true',
-    'icu_ver_major': '67',
+    'icu_ver_major': '68',
   },
   'target_defaults': {
     'includes': [

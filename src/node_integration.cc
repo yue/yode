@@ -124,13 +124,10 @@ void NodeIntegration::OnCallNextTick(uv_async_t* handle) {
   node::Environment* env = node::Environment::GetCurrent(isolate);
   CHECK(env);
 
-  // The InternalCallbackScope can handle everything for us.
+  // The CallbackScope can handle everything for us.
   v8::Context::Scope context_scope(env->context());
-  node::InternalCallbackScope scope(
-      env,
-      v8::Local<v8::Object>(),
-      {0, 0},
-      node::InternalCallbackScope::kNoFlags);
+  node::CallbackScope scope(env->isolate(), v8::Object::New(env->isolate()),
+                            {0, 0});
 }
 
 }  // namespace yode
