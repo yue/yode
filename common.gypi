@@ -81,6 +81,9 @@
     'icu_small': 'true',
     'icu_ver_major': '68',
   },
+  'xcode_settings': {
+    'SDKROOT': 'macosx11.0',
+  },
   'target_defaults': {
     'includes': [
       'deps/filename_rules.gypi',

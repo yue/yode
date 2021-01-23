@@ -4,8 +4,10 @@ const fs = require('fs')
 const path = require('path')
 const os = require('os')
 
+const host_arch = os.arch()
+
 // Specify target_arch.
-let target_arch = 'x64'
+let target_arch = host_arch
 if (process.argv.length > 2)
   target_arch = process.argv[2]
 
@@ -30,8 +32,23 @@ execSync('git submodule update --init --recursive', {stdio: null})
 // Generate some dynamic gyp files.
 execSync(`python configure --with-intl=small-icu --openssl-no-asm --dest-cpu=${target_arch}`, {cwd: 'node'})
 
+// Cross compilation support on macOS.
+if (process.platform === 'darwin') {
+  if (host_arch !== target_arch) {
+    process.env.GYP_CROSSCOMPILE = '1'
+    Object.assign(process.env, {
+      CC: `cc -arch ${target_arch}`,
+      CXX: `c++ -arch ${target_arch}`,
+      CC_target: `cc -arch ${target_arch}`,
+      CXX_target: `c++ -arch ${target_arch}`,
+      CC_host: 'cc -arch x86_64',
+      CXX_host: 'c++ -arch x86_64',
+    })
+  }
+}
+
 // Update the build configuration.
-execSync(`python node/tools/gyp/gyp_main.py yode.gyp -f ninja -Dhost_arch=x64 -Dtarget_arch=${target_arch} -Icommon.gypi --depth .`)
+execSync(`python node/tools/gyp/gyp_main.py yode.gyp -f ninja -Dhost_arch=${host_arch} -Dtarget_arch=${target_arch} -Icommon.gypi --depth .`)
 
 // Build.
 const epath = `${path.join('deps', 'ninja')}${path.delimiter}${process.env.PATH}`

@@ -15,7 +15,6 @@ jobs:
       ia32:
         TARGET_ARCH: ia32
   timeoutInMinutes: 120
-  cancelTimeoutInMinutes: 120
   steps:
   - template: azure-pipelines-template.yml
   - script: out\Release\yode.exe test.js
@@ -24,15 +23,19 @@ jobs:
 - job: macos_build
   displayName: 'Build for macOS'
   pool:
-    vmImage: 'macOS-10.14'
+    vmImage: 'macOS-10.15'
   strategy:
     matrix:
       x64:
         TARGET_ARCH: x64
+      arm64:
+        TARGET_ARCH: arm64
+  timeoutInMinutes: 120
   steps:
   - template: azure-pipelines-template.yml
   - script: out/Release/yode test.js
     displayName: Run tests
+    condition: eq(variables['TARGET_CPU'], 'x64')
 
 - job: linux_build
   displayName: 'Build for Linux'
@@ -42,6 +45,7 @@ jobs:
     matrix:
       x64:
         TARGET_ARCH: x64
+  timeoutInMinutes: 120
   steps:
   - script: |
       sudo apt-get update
