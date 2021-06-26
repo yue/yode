@@ -30,7 +30,7 @@ execSync('git submodule sync --recursive', {stdio: null})
 execSync('git submodule update --init --recursive', {stdio: null})
 
 // Generate some dynamic gyp files.
-execSync(`python configure --with-intl=small-icu --openssl-no-asm --dest-cpu=${target_arch}`, {cwd: 'node'})
+execSync(`python3 configure --with-intl=small-icu --openssl-no-asm --dest-cpu=${target_arch}`, {cwd: 'node'})
 
 // Cross compilation support on macOS.
 if (process.platform === 'darwin') {
@@ -47,8 +47,14 @@ if (process.platform === 'darwin') {
   }
 }
 
+// The build configurations of V8 does not like passing -Dtarget_arch in command
+// line, and doing so would break cross compilation. So we just write it to a
+// file and pass it via -Iarch.gypi.
+fs.writeFileSync(path.join(__dirname, 'arch.gypi'),
+                 JSON.stringify({variables: {target_arch, host_arch}}, null, '  '))
+
 // Update the build configuration.
-execSync(`python node/tools/gyp/gyp_main.py yode.gyp -f ninja -Dhost_arch=${host_arch} -Dtarget_arch=${target_arch} -Icommon.gypi --depth .`)
+execSync('python3 node/tools/gyp/gyp_main.py yode.gyp -f ninja -Iarch.gypi -Icommon.gypi --depth .')
 
 // Build.
 const epath = `${path.join('deps', 'ninja')}${path.delimiter}${process.env.PATH}`

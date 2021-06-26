@@ -40,7 +40,7 @@ jobs:
 - job: linux_build
   displayName: 'Build for Linux'
   pool:
-    vmImage: 'ubuntu-18.04'
+    vmImage: 'ubuntu-20.04'
   strategy:
     matrix:
       x64:

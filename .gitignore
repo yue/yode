@@ -1,2 +1,3 @@
 *.swp
+/arch.gypi
 /out
