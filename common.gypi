@@ -77,7 +77,6 @@
     'v8_typed_array_max_size_in_heap': 0,
     'v8_use_siphash': 1,
     'v8_use_snapshot': 1,
-    'want_separate_host_toolset': 1,
     'icu_data_file': 'icudt69l.dat',
     'icu_data_in': '../../deps/icu-tmp/icudt69l.dat',
     'icu_default_data': '',
@@ -87,9 +86,6 @@
     'icu_path': '../../deps/icu-small',
     'icu_small': 'true',
     'icu_ver_major': '69',
-  },
-  'xcode_settings': {
-    'SDKROOT': 'macosx11.1',
   },
   'target_defaults': {
     'includes': [

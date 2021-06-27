@@ -32,10 +32,11 @@ execSync('git submodule update --init --recursive', {stdio: null})
 // Generate some dynamic gyp files.
 execSync(`python3 configure --with-intl=small-icu --openssl-no-asm --dest-cpu=${target_arch}`, {cwd: 'node'})
 
-// Cross compilation support on macOS.
-if (process.platform === 'darwin') {
-  if (host_arch !== target_arch) {
+// Cross compilation.
+if (host_arch !== target_arch) {
+  if (process.platform === 'darwin' || process.platform === 'win32')
     process.env.GYP_CROSSCOMPILE = '1'
+  if (process.platform === 'darwin') {
     Object.assign(process.env, {
       CC: `cc -arch ${target_arch}`,
       CXX: `c++ -arch ${target_arch}`,
@@ -47,13 +48,20 @@ if (process.platform === 'darwin') {
   }
 }
 
-// The build configurations of V8 does not like passing -Dtarget_arch in command
-// line, and doing so would break cross compilation. So we just write it to a
-// file and pass it via -Iarch.gypi.
-fs.writeFileSync(path.join(__dirname, 'arch.gypi'),
-                 JSON.stringify({variables: {target_arch, host_arch}}, null, '  '))
-
 // Update the build configuration.
+const config = {
+  variables: {
+    target_arch,
+    host_arch,
+    want_separate_host_toolset: host_arch === target_arch ? 0 : 1
+  }
+}
+if (process.platform === 'darwin') {
+  const sdks = String(execSync('xcodebuild -showsdks', {stdio: null})).trim()
+  const SDKROOT = sdks.match(/-sdk (macosx\d+\.\d+)/)[1]
+  config.xcode_settings = {SDKROOT}
+}
+fs.writeFileSync(path.join(__dirname, 'arch.gypi'), JSON.stringify(config, null, '  '))
 execSync('python3 node/tools/gyp/gyp_main.py yode.gyp -f ninja -Iarch.gypi -Icommon.gypi --depth .')
 
 // Build.
