@@ -38,13 +38,13 @@ import string
 
 
 def ToCArray(elements, step=10):
-  slices = (elements[i:i+step] for i in xrange(0, len(elements), step))
+  slices = (elements[i:i+step] for i in range(0, len(elements), step))
   slices = map(lambda s: ','.join(str(x) for x in s), slices)
   return ',\n'.join(slices)
 
 
 def ToCString(contents):
-  return ToCArray(map(ord, contents), step=20)
+  return ToCArray(list(map(ord, contents)), step=20)
 
 
 def ReadFile(filename):
@@ -138,7 +138,7 @@ def ReadMacros(lines):
     hash = line.find('#')
     if hash != -1: line = line[:hash]
     line = line.strip()
-    if len(line) is 0: continue
+    if len(line) == 0: continue
     const_match = CONST_PATTERN.match(line)
     if const_match:
       name = const_match.group(1)
@@ -220,8 +220,8 @@ def Render(var, data):
   # Treat non-ASCII as UTF-8 and convert it to UTF-16.
   if any(ord(c) > 127 for c in data):
     template = TWO_BYTE_STRING
-    data = map(ord, data.decode('utf-8').encode('utf-16be'))
-    data = [data[i] * 256 + data[i+1] for i in xrange(0, len(data), 2)]
+    data = list(map(ord, data.decode('utf-8').encode('utf-16be')))
+    data = [data[i] * 256 + data[i+1] for i in range(0, len(data), 2)]
     data = ToCArray(data)
   else:
     template = ONE_BYTE_STRING

@@ -7,7 +7,7 @@ jobs:
 - job: windows_build
   displayName: 'Build for Windows'
   pool:
-    vmImage: 'VS2017-Win2016'
+    vmImage: 'windows-2019'
   strategy:
     matrix:
       x64:

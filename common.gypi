@@ -9,17 +9,11 @@
     'python': 'python',
     'coverage': 'false',
     'llvm_version': '3.3',
-    'arm_float_abi': 'default',
-    'arm_fpu': 'vfp',
-    'arm_thumb': 0,
-    'arm_version': 'default',
-    'build_v8_with_gn': 'false',
     'debug_nghttp2': 'false',
     'debug_node': 'false',
     'enable_lto': 'false',
     'enable_pgo_generate': 'false',
     'enable_pgo_use': 'false',
-    'experimental_quic': 'false',
     'force_dynamic_crt': 0,
     'openssl_fips': '',
     'openssl_is_fips': 'false',
@@ -74,7 +68,6 @@
     'v8_promise_internal_field_count': 1,
     'v8_random_seed': 0,
     'v8_trace_maps': 0,
-    'v8_typed_array_max_size_in_heap': 0,
     'v8_use_siphash': 1,
     'v8_use_snapshot': 1,
     'icu_data_file': 'icudt69l.dat',
@@ -109,6 +102,11 @@
           # users on Windows.
           'U_STATIC_IMPLEMENTATION=1',
         ],
+      }],
+      ['_target_name in ["v8_base_without_compiler", "v8_initializers"] and OS=="win"', {
+        # Required for avoiding LINK error:
+        # fatal error LNK1248: image size exceeds maximum allowable size
+        'msvs_shard': 4,
       }],
       ['_target_name in ["libnode", "genrb", "genccode"] or _target_name.startswith("icu")', {
         # Somehow Node's gyp files are not adding the include dirs.

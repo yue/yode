@@ -85,6 +85,8 @@
               'SubSystem': '2',
               # Defined in node target, required for building x86.
               'ImageHasSafeExceptionHandlers': 'false',
+              # Disable incremental linking, for smaller program.
+              'LinkIncremental': 1,
             },
           },
           'msvs_disabled_warnings': [
