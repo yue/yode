@@ -93,6 +93,10 @@ describe('node', function() {
     child.stderr.on('data', (chunk) => {
       output += String(chunk)
     })
+    child.on('error', (error) => {
+      console.log(error)
+      done(`Fail to execute: ${p}`)
+    })
     child.on('exit', (code) => {
       if (code == 0) {
         fs.unlinkSync(p)

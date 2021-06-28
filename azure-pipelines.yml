@@ -7,18 +7,23 @@ jobs:
 - job: windows_build
   displayName: 'Build for Windows'
   pool:
-    vmImage: 'windows-2019'
+    name: Default
+    demands: agent.os -equals Windows_NT
   strategy:
     matrix:
       x64:
         TARGET_ARCH: x64
       ia32:
         TARGET_ARCH: ia32
-  timeoutInMinutes: 120
+  timeoutInMinutes: 180
   steps:
   - template: azure-pipelines-template.yml
   - script: out\Release\yode.exe test.js
     displayName: Run tests
+  - task: DeleteFiles@1
+    displayName: Clear disk
+    inputs:
+      Contents: '**/*'
 
 - job: macos_build
   displayName: 'Build for macOS'
@@ -30,12 +35,12 @@ jobs:
         TARGET_ARCH: x64
       arm64:
         TARGET_ARCH: arm64
-  timeoutInMinutes: 120
+  timeoutInMinutes: 180
   steps:
   - template: azure-pipelines-template.yml
   - script: out/Release/yode test.js
     displayName: Run tests
-    condition: eq(variables['TARGET_CPU'], 'x64')
+    condition: and(succeeded(), eq(variables['TARGET_ARCH'], 'x64'))
 
 - job: linux_build
   displayName: 'Build for Linux'
