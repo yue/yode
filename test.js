@@ -78,38 +78,6 @@ describe('node', function() {
     })
   })
 
-  it('start with asar', function(done) {
-    const a = path.join(__dirname, 'deps', 'app.asar')
-    const p = path.join(require('os').tmpdir(), 'asar-test-' + path.basename(process.execPath))
-    fs.writeFileSync(p, fs.readFileSync(process.execPath))
-    fs.appendFileSync(p, fs.readFileSync(a))
-    fs.chmodSync(p, 0o755)
-
-    let output = ''
-    const child = require('child_process').exec(p)
-    child.stdout.on('data', (chunk) => {
-      output += String(chunk)
-    })
-    child.stderr.on('data', (chunk) => {
-      output += String(chunk)
-    })
-    child.on('error', (error) => {
-      console.log(error)
-      done(`Fail to execute: ${p}`)
-    })
-    child.on('exit', (code) => {
-      if (code == 0) {
-        fs.unlinkSync(p)
-      } else {
-        console.log(p)
-        console.log(output)
-      }
-      assert.equal(code, 0)
-      assert.ok(String(fs.readFileSync(a)).includes(output))
-      done()
-    })
-  })
-
   it('process can quit', function(done) {
     const p = path.join(require('os').tmpdir(), 'yode-exit.js')
     fs.writeFileSync(p, "process.exit(123)")
@@ -124,7 +92,48 @@ describe('node', function() {
     })
   })
 
+  it('start with asar', function() {
+    const result = packageAndRun('exit_123')
+    assert.equal(result.status, 123)
+  })
+
+  it('start with asar with output', function() {
+    const result = packageAndRun('print_filename')
+    assert.equal(result.status, 0)
+    const p = path.join(__dirname, `print_filename_${path.basename(process.execPath)}`, 'asar', 'index.js')
+    assert.equal(result.stdout.toString().trim(), p)
+  })
+
+  it('start with asar with fs', function() {
+    const result = packageAndRun('print_self')
+    assert.equal(result.status, 0)
+    assert.ok(result.stdout.toString().includes('fs.readFile(__filename'))
+  })
+
   it('Promise can resolve', async () => {
     await new Promise(resolve => setTimeout(resolve, 100))
   })
 })
+
+function packageAndRun(asar) {
+  const a = path.join(__dirname, 'fixtures', asar + '.asar')
+  const p = path.join(__dirname, `${path.basename(asar, '.asar')}_${path.basename(process.execPath)}`)
+  fs.writeFileSync(p, fs.readFileSync(process.execPath))
+  fs.appendFileSync(p, fs.readFileSync(a))
+  appendMeta(p, a)
+  fs.chmodSync(p, 0o755)
+  const result = require('child_process').spawnSync(p)
+  fs.unlinkSync(p)  // will be left for debugging if failed to run
+  return result
+}
+
+// Append ASAR meta information at end of target.
+function appendMeta(target, asar) {
+  const stat = fs.statSync(asar)
+  const meta = Buffer.alloc(8 + 1 + 4)
+  const asarSize = stat.size + meta.length
+  meta.writeDoubleLE(asarSize, 0)
+  meta.writeUInt8(2, 8)
+  meta.write('ASAR', 9)
+  fs.appendFileSync(target, meta)
+}
