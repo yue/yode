@@ -6,7 +6,6 @@
     # Reflects node's config.gypi.
     'library%': 'static_library',
     'component': 'static_library',
-    'python': 'python',
     'coverage': 'false',
     'llvm_version': '3.3',
     'debug_nghttp2': 'false',
@@ -108,7 +107,7 @@
         # fatal error LNK1248: image size exceeds maximum allowable size
         'msvs_shard': 4,
       }],
-      ['_target_name in ["libnode", "genrb", "genccode"] or _target_name.startswith("icu")', {
+      ['_target_name in ["genrb", "genccode"] or _target_name.startswith("libnode") or _target_name.startswith("icu")', {
         # Somehow Node's gyp files are not adding the include dirs.
         'include_dirs': [
           'node/deps/icu-small/source/common',

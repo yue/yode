@@ -1,3 +1,3 @@
 *.swp
-/arch.gypi
+/config.gypi
 /out

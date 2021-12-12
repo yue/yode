@@ -131,7 +131,7 @@
             '<(SHARED_INTERMEDIATE_DIR)/yode_javascript.cc',
           ],
           'action': [
-            'python',
+            '<(python)',
             'deps/js2c.py',
             '<@(_outputs)',
             '<@(_inputs)',

@@ -12,19 +12,8 @@ let target_arch = host_arch
 if (process.argv.length > 2)
   target_arch = process.argv[2]
 
-// Wrapper of execSync that prints output.
-const execSync = (command, options = {}) => {
-  if (options.stdio === undefined)
-    options.stdio = 'inherit'
-  if (options.env)
-    options.env = Object.assign(options.env, options.env)
-  else
-    options.env = Object.assign({}, process.env)
-  return cp.execSync(command, options)
-}
-
 // Current version.
-const version = String(execSync('git describe --always --tags', {stdio: null})).trim()
+const version = commandResult('git describe --always --tags')
 
 // Sync submodule.
 execSync('git submodule sync --recursive', {stdio: null})
@@ -55,25 +44,32 @@ if (host_arch !== target_arch && process.platform === 'darwin') {
   })
 }
 
+// Find Python 3
+const python = findPython3()
+
 // Generate some dynamic gyp files.
-execSync(`python3 configure --with-intl=small-icu --openssl-no-asm --dest-cpu=${target_arch}`, {cwd: 'node'})
+execSync(`${python} configure --with-intl=small-icu --openssl-no-asm --dest-cpu=${target_arch}`, {cwd: 'node'})
 
 // Update the build configuration.
 const config = {
   variables: {
+    python,
     target_arch,
     host_arch,
-    want_separate_host_toolset: host_arch === target_arch ? 0 : 1
+    want_separate_host_toolset: host_arch === target_arch ? 0 : 1,
   }
 }
 if (process.platform === 'darwin') {
   // Set SDK version to the latest installed.
-  const sdks = String(execSync('xcodebuild -showsdks', {stdio: null})).trim()
+  const sdks = commandResult('xcodebuild -showsdks')
   const SDKROOT = sdks.match(/-sdk (macosx\d+\.\d+)/)[1]
   config.xcode_settings = {SDKROOT}
 }
-fs.writeFileSync(path.join(__dirname, 'arch.gypi'), JSON.stringify(config, null, '  '))
-execSync('python3 node/tools/gyp/gyp_main.py yode.gyp --no-parallel -f ninja -Iarch.gypi -Icommon.gypi --depth .')
+// Read node_library_files from config.gypi.
+config.variables.node_library_files = readNodeLibraryFiles()
+fs.writeFileSync(path.join(__dirname, 'config.gypi'), JSON.stringify(config, null, '  '))
+
+execSync(`${python} node/tools/gyp/gyp_main.py yode.gyp --no-parallel -f ninja -Iconfig.gypi -Icommon.gypi --depth .`)
 
 // Build.
 const epath = `${path.join('deps', 'ninja')}${path.delimiter}${process.env.PATH}`
@@ -98,3 +94,35 @@ zip.addFile('node/LICENSE', 'LICENSE')
 zip.addFile(`out/Release/${filename}`, filename)
 zip.outputStream.pipe(fs.createWriteStream(`out/Release/${distname}`))
 zip.end()
+
+function readNodeLibraryFiles() {
+  const config_gypi = fs.readFileSync(path.join(__dirname, 'node', 'config.gypi')).toString()
+  const node_library_files = JSON.parse(config_gypi.split('\n').slice(1).join('\n').replace(/'/g, '"')).variables.node_library_files
+  return node_library_files.map(l => 'node/' + l)
+}
+
+function findPython3() {
+  for (const python of ['python', 'python3']) {
+    try {
+      const version = commandResult(`${python} --version`)
+      if (version.startsWith('Python 3'))
+        return python
+    } catch (error) {}
+  }
+  return 'python'
+}
+
+function commandResult(command) {
+  return String(execSync(command, {stdio: null})).trim()
+}
+
+// Wrapper of execSync that prints output.
+function execSync(command, options = {}) {
+  if (options.stdio === undefined)
+    options.stdio = 'inherit'
+  if (options.env)
+    options.env = Object.assign(options.env, options.env)
+  else
+    options.env = Object.assign({}, process.env)
+  return cp.execSync(command, options)
+}
