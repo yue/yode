@@ -110,21 +110,42 @@ describe('node', function() {
     assert.ok(result.stdout.toString().includes('fs.readFile(__filename'))
   })
 
+  it('start with asar with offset', function() {
+    const result = packageAndRun('print_self', changeOffset)
+    assert.equal(result.status, 0)
+    assert.ok(result.stdout.toString().includes('fs.readFile(__filename'))
+  })
+
   it('Promise can resolve', async () => {
     await new Promise(resolve => setTimeout(resolve, 100))
   })
 })
 
-function packageAndRun(asar) {
+function packageAndRun(asar, modifyBinary = null) {
   const a = path.join(__dirname, 'fixtures', asar + '.asar')
   const p = path.join(__dirname, `${path.basename(asar, '.asar')}_${path.basename(process.execPath)}`)
   fs.writeFileSync(p, fs.readFileSync(process.execPath))
+  if (modifyBinary)
+    modifyBinary(p)
   fs.appendFileSync(p, fs.readFileSync(a))
   appendMeta(p, a)
   fs.chmodSync(p, 0o755)
   const result = require('child_process').spawnSync(p)
-  fs.unlinkSync(p)  // will be left for debugging if failed to run
+  if (result.status !== null)
+    fs.unlinkSync(p)  // will be left for debugging if failed to run
   return result
+}
+
+function changeOffset(target) {
+  const mark = '/* REPLACE_WITH_OFFSET */'
+  const data = fs.readFileSync(target)
+  const pos = data.indexOf(Buffer.from(mark))
+  if (pos <= 0)
+    throw new Error('Unable to find offset mark')
+  const stat = fs.statSync(target)
+  const replace = `, ${stat.size}`.padEnd(mark.length, ' ')
+  data.write(replace, pos)
+  fs.writeFileSync(target, data)
 }
 
 // Append ASAR meta information at end of target.

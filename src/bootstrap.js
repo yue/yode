@@ -58,7 +58,7 @@ function wrapWithActivateUvLoop(func) {
   try {
     // Is the executable concatenated with ASAR archive?
     const AsarArchive = require('asar_archive')
-    process.asarArchive = new AsarArchive(execPath)
+    process.asarArchive = new AsarArchive(execPath/* REPLACE_WITH_OFFSET */)
 
     // If it is (i.e. no exception), then patch the fs module after bootstrap
     // is over.

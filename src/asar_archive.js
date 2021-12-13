@@ -4,10 +4,13 @@ const os = require('os')
 const Pickle = require('pickle')
 
 class AsarArchive {
-  constructor(asarPath) {
+  constructor(asarPath, offset = null) {
     const fd = fs.openSync(asarPath, 'r')
     try {
-      this.readExtendedMeta(fd, fs.statSync(asarPath))
+      if (offset)
+        this.contentOffset = offset
+      else
+        this.readExtendedMeta(fd, fs.statSync(asarPath))
 
       // Read size.
       let buffer = Buffer.alloc(8)
