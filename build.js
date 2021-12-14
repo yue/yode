@@ -12,6 +12,9 @@ let target_arch = host_arch
 if (process.argv.length > 2)
   target_arch = process.argv[2]
 
+// Release or Debug.
+const build_type = 'Release'
+
 // Current version.
 const version = commandResult('git describe --always --tags')
 
@@ -69,20 +72,20 @@ if (process.platform === 'darwin') {
 config.variables.node_library_files = readNodeLibraryFiles()
 fs.writeFileSync(path.join(__dirname, 'config.gypi'), JSON.stringify(config, null, '  '))
 
-execSync(`${python} node/tools/gyp/gyp_main.py yode.gyp --no-parallel -f ninja -Iconfig.gypi -Icommon.gypi --depth .`)
+execSync(`${python} node/tools/gyp/gyp_main.py yode.gyp --no-parallel -f ninja -Dbuild_type=${build_type} -Iconfig.gypi -Icommon.gypi --depth .`)
 
 // Build.
 const epath = `${path.join('deps', 'ninja')}${path.delimiter}${process.env.PATH}`
-execSync(`ninja -j ${os.cpus().length} -C out/Release yode`, {env: {PATH: epath}})
+execSync(`ninja -j ${os.cpus().length} -C out/${build_type} yode`, {env: {PATH: epath}})
 
 if (process.platform === 'linux')
-  execSync('strip out/Release/yode')
+  execSync(`strip out/${build_type}/yode`)
 
 // Remove old zip.
-const files = fs.readdirSync('out/Release')
+const files = fs.readdirSync(`out/${build_type}`)
 for (let f of files) {
   if (f.endsWith('.zip'))
-    fs.unlinkSync(`out/Release/${f}`)
+    fs.unlinkSync(`out/${build_type}/${f}`)
 }
 
 // Create zip.
@@ -91,8 +94,8 @@ const zip = new yazl.ZipFile()
 const distname = `yode-${version}-${process.platform}-${target_arch}.zip`
 const filename = process.platform == 'win32' ? 'yode.exe' : 'yode'
 zip.addFile('node/LICENSE', 'LICENSE')
-zip.addFile(`out/Release/${filename}`, filename)
-zip.outputStream.pipe(fs.createWriteStream(`out/Release/${distname}`))
+zip.addFile(`out/${build_type}/${filename}`, filename)
+zip.outputStream.pipe(fs.createWriteStream(`out/${build_type}/${distname}`))
 zip.end()
 
 function readNodeLibraryFiles() {

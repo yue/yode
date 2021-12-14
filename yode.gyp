@@ -25,6 +25,7 @@
       'include_dirs': [
         '.',
         'node/deps/cares/include',  # for ares.h
+        'node/deps/openssl/openssl/include',  # for openssl/opensslv.h
         'node/deps/uv/include',  # for uv.h
         'node/src',  # for node things
       ],
