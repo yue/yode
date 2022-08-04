@@ -7,13 +7,18 @@ const cp = require('child_process')
 
 const host_arch = os.arch()
 
-// Specify target_arch.
+// Parse args.
+let cc_wrapper
+let build_type = 'Release'
 let target_arch = host_arch
-if (process.argv.length > 2)
-  target_arch = process.argv[2]
-
-// Release or Debug.
-const build_type = 'Release'
+for (const arg of process.argv.slice(2)) {
+  if (arg.startsWith('--cc-wrapper='))
+    cc_wrapper = arg.substr(arg.indexOf('=') + 1)
+  else if (arg in ['Debug', 'Release'])
+    build_type = arg
+  else if (!arg.startsWith('-'))
+    target_arch = arg
+}
 
 // Current version.
 const version = commandResult('git describe --always --tags')
@@ -44,6 +49,16 @@ if (host_arch !== target_arch && process.platform === 'darwin') {
     CXX_target: `c++ -arch ${target_arch}`,
     CC_host: 'cc -arch x86_64',
     CXX_host: 'c++ -arch x86_64',
+  })
+}
+
+// Handle wrapper.
+if (cc_wrapper) {
+  Object.assign(process.env, {
+    'CC_wrapper': cc_wrapper,
+    'CXX_wrapper': cc_wrapper,
+    'CC.host_wrapper': cc_wrapper,
+    'CXX.host_wrapper': cc_wrapper,
   })
 }
 
