@@ -29,12 +29,11 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
 
-      - name: Install sccache
+      - name: CCache
         uses: hendrikmuhs/ccache-action@v1.2
         with:
-          variant: sccache
           max-size: '2G'
-          key: ${{ matrix.os }}-${{ matrix.arch }}
+          key: ccache-${{ matrix.os }}-${{ matrix.arch }}
 
       - name: Build
         env:
@@ -43,11 +42,13 @@ jobs:
         run: |
           set -e
           if [ "$(uname)" == "Darwin" ]; then
-            WRAPPER=/usr/local/bin/sccache
+            WRAPPER=/usr/local/bin/ccache
           elif [ "$(expr substr $(uname -s) 1 5)" == "Linux" ]; then
-            WRAPPER=/usr/local/bin/sccache
+            WRAPPER=/usr/bin/ccache
           elif [ "$(expr substr $(uname -s) 1 5)" == "MINGW" ]; then
-            WRAPPER=C:\\Users\\runneradmin\\.cargo\\bin\\sccache.exe
+            WRAPPER=
+            # TODO ccache has bug building V8, retry after upgrades.
+            # WRAPPER=C:\\Users\\runneradmin\\.cargo\\bin\\ccache.exe
           fi
           node build.js --cc-wrapper=$WRAPPER ${{ matrix.arch }}
 

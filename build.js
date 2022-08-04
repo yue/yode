@@ -90,8 +90,8 @@ fs.writeFileSync(path.join(__dirname, 'config.gypi'), JSON.stringify(config, nul
 execSync(`${python} node/tools/gyp/gyp_main.py yode.gyp --no-parallel -f ninja -Dbuild_type=${build_type} -Iconfig.gypi -Icommon.gypi --depth .`)
 
 // Build.
-const epath = `${path.join('deps', 'ninja')}${path.delimiter}${process.env.PATH}`
-execSync(`ninja -j ${os.cpus().length} -C out/${build_type} yode`, {env: {PATH: epath}})
+process.env.PATH = `${path.join('deps', 'ninja')}${path.delimiter}${process.env.PATH}`
+execSync(`ninja -j ${os.cpus().length} -C out/${build_type} yode`)
 
 if (process.platform === 'linux')
   execSync(`strip out/${build_type}/yode`)
