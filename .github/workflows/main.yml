@@ -32,7 +32,7 @@ jobs:
       - name: CCache
         uses: hendrikmuhs/ccache-action@v1.2
         with:
-          max-size: '2G'
+          max-size: ${{ matrix.arch == 'arm64' && '3G' || '2G' }}
           key: ccache-${{ matrix.os }}-${{ matrix.arch }}
 
       - name: Build
