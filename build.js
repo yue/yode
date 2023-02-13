@@ -66,7 +66,13 @@ if (cc_wrapper) {
 const python = findPython3()
 
 // Generate some dynamic gyp files.
-execSync(`${python} configure --with-intl=small-icu --openssl-no-asm --dest-cpu=${target_arch}`, {cwd: 'node'})
+const configureArgs = [
+  '--with-intl=small-icu',
+  '--without-node-code-cache',
+  '--openssl-no-asm',
+  `--dest-cpu=${target_arch}`,
+]
+execSync(`${python} configure ${configureArgs.join(' ')}`, {cwd: 'node'})
 
 // Update the build configuration.
 const config = {
@@ -84,7 +90,8 @@ if (process.platform === 'darwin') {
   config.xcode_settings = {SDKROOT}
 }
 // Read node_library_files from config.gypi.
-config.variables.node_library_files = readNodeLibraryFiles()
+config.variables.node_library_files = readNodeConfigFiles('node_library_files').map(l => 'node/' + l)
+config.variables.node_builtin_shareable_builtins = readNodeConfigFiles('node_builtin_shareable_builtins')
 fs.writeFileSync(path.join(__dirname, 'config.gypi'), JSON.stringify(config, null, '  '))
 
 execSync(`${python} node/tools/gyp/gyp_main.py yode.gyp --no-parallel -f ninja -Dbuild_type=${build_type} -Iconfig.gypi -Icommon.gypi --depth .`)
@@ -113,10 +120,9 @@ zip.addFile(`out/${build_type}/${filename}`, filename)
 zip.outputStream.pipe(fs.createWriteStream(`out/${build_type}/${distname}`))
 zip.end()
 
-function readNodeLibraryFiles() {
+function readNodeConfigFiles(key) {
   const config_gypi = fs.readFileSync(path.join(__dirname, 'node', 'config.gypi')).toString()
-  const node_library_files = JSON.parse(config_gypi.split('\n').slice(1).join('\n').replace(/'/g, '"')).variables.node_library_files
-  return node_library_files.map(l => 'node/' + l)
+  return JSON.parse(config_gypi.split('\n').slice(1).join('\n').replace(/'/g, '"')).variables[key]
 }
 
 function findPython3() {

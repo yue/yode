@@ -32,10 +32,6 @@ NodeIntegrationLinux::NodeIntegrationLinux() : epoll_(epoll_create(1)) {
   ev.events = EPOLLIN;
   ev.data.fd = backend_fd;
   epoll_ctl(epoll_, EPOLL_CTL_ADD, backend_fd, &ev);
-
-  // Get notified when libuv's watcher queue changes.
-  uv_loop_->data = this;
-  uv_loop_->on_watcher_queue_updated = OnWatcherQueueChanged;
 }
 
 NodeIntegrationLinux::~NodeIntegrationLinux() {
@@ -57,14 +53,6 @@ void NodeIntegrationLinux::PostTask(const std::function<void()>& task) {
                   reinterpret_cast<GSourceFunc>(OnSource),
                   new std::function<void()>(task),
                   Delete<std::function<void()>>);
-}
-
-// static
-void NodeIntegrationLinux::OnWatcherQueueChanged(uv_loop_t* loop) {
-  // We need to break the io polling in the epoll thread when loop's watcher
-  // queue changes, otherwise new events cannot be notified.
-  auto* self = static_cast<NodeIntegrationLinux*>(loop->data);
-  self->WakeupEmbedThread();
 }
 
 // static

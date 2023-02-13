@@ -15,7 +15,7 @@ function wrapWithActivateUvLoop(func) {
   delete process.bootstrap
 
   // The |require| here is actually |nativeModuleRequire|.
-  const {NativeModule, internalBinding, require} = internalRequire('internal/bootstrap/loaders')
+  const {BuiltinModule, internalBinding, require} = internalRequire('internal/bootstrap/loaders')
 
   // Make async method work.
   const timers = require('timers')
@@ -53,7 +53,7 @@ function wrapWithActivateUvLoop(func) {
 
   // Turn our modules into built-in modules.
   for (const id in this)
-    NativeModule.map.set(id, new YodeModule(id, this[id], require))
+    BuiltinModule.map.set(id, new YodeModule(id, this[id], require))
 
   try {
     // Is the executable concatenated with ASAR archive?

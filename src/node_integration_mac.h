@@ -17,9 +17,6 @@ class NodeIntegrationMac : public NodeIntegration {
  private:
   void PollEvents() override;
   void PostTask(const std::function<void()>& task) override;
-
-  // Called when uv's watcher queue changes.
-  static void OnWatcherQueueChanged(uv_loop_t* loop);
 };
 
 }  // namespace yode

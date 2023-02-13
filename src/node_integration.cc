@@ -17,6 +17,8 @@ namespace yode {
 NodeIntegration::NodeIntegration()
     : uv_loop_(uv_default_loop()),
       embed_closed_(false) {
+  // Interrupt embed polling when a handle is started.
+  uv_loop_configure(uv_loop_, UV_LOOP_INTERRUPT_ON_IO_CHANGE);
 }
 
 NodeIntegration::~NodeIntegration() {

@@ -18,9 +18,6 @@ class NodeIntegrationLinux : public NodeIntegration {
   void PollEvents() override;
   void PostTask(const std::function<void()>& task) override;
 
-  // Called when uv's watcher queue changes.
-  static void OnWatcherQueueChanged(uv_loop_t* loop);
-
   // Epoll to poll for uv's backend fd.
   int epoll_;
 };

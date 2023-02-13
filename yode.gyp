@@ -4,7 +4,6 @@
       'target_name': 'yode',
       'type': 'executable',
       'sources': [
-        'node/src/node_code_cache_stub.cc',
         'node/src/node_snapshot_stub.cc',
         'src/main.cc',
         'src/node_integration.cc',

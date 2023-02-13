@@ -46,6 +46,7 @@ void Bootstrap(const v8::FunctionCallbackInfo<v8::Value>& args) {
   DefineJavaScript(env, exports);
   // Get the |bootstrap| function.
   v8::ScriptOrigin origin(
+      env->isolate(),
       node::FIXED_ONE_BYTE_STRING(env->isolate(), "bootstrap.js"));
   v8::MaybeLocal<v8::Script> script =
       v8::Script::Compile(env->context(), MainSource(env), &origin);
@@ -72,8 +73,10 @@ void Bootstrap(const v8::FunctionCallbackInfo<v8::Value>& args) {
 // Inject custom bindings.
 bool InitWrapper(node::Environment* env) {
   // Native methods.
-  env->SetMethod(env->process_object(), "bootstrap", &Bootstrap);
-  env->SetMethod(env->process_object(), "activateUvLoop", &ActivateUvLoop);
+  node::SetMethod(
+      env->context(), env->process_object(), "bootstrap", &Bootstrap);
+  node::SetMethod(
+      env->context(), env->process_object(), "activateUvLoop", &ActivateUvLoop);
   // process.versions.yode
   v8::Local<v8::Value> versions = env->process_object()->Get(
       env->context(), ToV8(env, "versions")).ToLocalChecked();
