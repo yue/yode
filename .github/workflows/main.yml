@@ -52,7 +52,8 @@ jobs:
           max-size: ${{ matrix.arch == 'arm64' && '3G' || '2G' }}
           key: ccache-${{ matrix.os }}-${{ matrix.arch }}
 
-      - name: Build
+      - name: Build Posix
+        if: startsWith(matrix.os, 'ubuntu') || startsWith(matrix.os, 'macos')
         env:
           CCACHE_SLOPPINESS: time_macros
         shell: bash
@@ -62,12 +63,13 @@ jobs:
             WRAPPER=/usr/local/bin/ccache
           elif [ "$(expr substr $(uname -s) 1 5)" == "Linux" ]; then
             WRAPPER=/usr/bin/ccache
-          elif [ "$(expr substr $(uname -s) 1 5)" == "MINGW" ]; then
-            WRAPPER=
-            # TODO ccache has bug building V8, retry after upgrades.
-            # WRAPPER=C:\\Users\\runneradmin\\.cargo\\bin\\ccache.exe
           fi
           node build.js --cc-wrapper=$WRAPPER ${{ matrix.arch }}
+
+      - name: Build Windows
+        if: join(matrix.os, '-') == 'self-hosted-Windows'
+        run: |
+          node build.js ${{ matrix.arch }}
 
       - name: Test
         if: matrix.arch == 'x64' || matrix.arch == 'ia32'
