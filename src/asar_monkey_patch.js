@@ -1,5 +1,6 @@
 const childProcess = require('child_process')
 const path = require('path')
+const util = require('util')
 
 // The root dir of asar archive.
 const rootDir = path._makeLong(path.join(execPath, 'asar'))
@@ -171,6 +172,8 @@ exports.wrapFsWithAsar = function(fs) {
     })
   }
 
+  fs.promises.lstat = util.promisify(fs.lstat)
+
   const {statSync} = fs
   fs.statSync = function(p) {
     const [isAsar] = splitPath(p)
@@ -191,44 +194,58 @@ exports.wrapFsWithAsar = function(fs) {
     })
   }
 
+  fs.promises.stat = util.promisify(fs.lstat)
+
+  const wrapRealpathSync = function(func) {
+    return function(p) {
+      const [isAsar, filePath] = splitPath(p)
+      if (!isAsar)
+        return func.apply(this, arguments)
+      const info = process.asarArchive.getFileInfo(filePath)
+      if (!info)
+        return notFoundError(filePath)
+      const real = process.asarArchive.realpath(info)
+      if (info.unpacked)
+        return real
+      else
+        return path.join(func(execPath), 'asar', real)
+    }
+  }
+
   const {realpathSync} = fs
-  fs.realpathSync = function(p) {
-    const [isAsar, filePath] = splitPath(p)
-    if (!isAsar)
-      return realpathSync.apply(this, arguments)
-    const info = process.asarArchive.getFileInfo(filePath)
-    if (!info)
-      return notFoundError(filePath)
-    const real = process.asarArchive.realpath(info)
-    if (info.unpacked)
-      return real
-    else
-      return path.join(realpathSync(execPath), 'asar', real)
+  fs.realpathSync = wrapRealpathSync(realpathSync)
+  fs.realpathSync.native = wrapRealpathSync(realpathSync.native);
+
+  const wrapRealpath = function(func) {
+    return function(p, cache, callback) {
+      const [isAsar, filePath] = splitPath(p)
+      if (!isAsar)
+        return func.apply(this, arguments)
+      if (typeof cache === 'function') {
+        callback = cache
+        cache = undefined
+      }
+      const info = process.asarArchive.getFileInfo(filePath)
+      if (!info)
+        return notFoundError(filePath, callback)
+      const real = process.asarArchive.realpath(info)
+      if (info.unpacked) {
+        callback(null, real)
+      } else {
+        func(execPath, function(err, p) {
+          if (err)
+            return callback(err)
+          return callback(null, path.join(p, 'asar', real))
+        })
+      }
+    }
   }
 
   const {realpath} = fs
-  fs.realpath = function(p, cache, callback) {
-    const [isAsar, filePath] = splitPath(p)
-    if (!isAsar)
-      return realpath.apply(this, arguments)
-    if (typeof cache === 'function') {
-      callback = cache
-      cache = undefined
-    }
-    const info = process.asarArchive.getFileInfo(filePath)
-    if (!info)
-      return notFoundError(filePath, callback)
-    const real = process.asarArchive.realpath(info)
-    if (info.unpacked) {
-      callback(null, real)
-    } else {
-      realpath(execPath, function(err, p) {
-        if (err)
-          return callback(err)
-        return callback(null, path.join(p, 'asar', real))
-      })
-    }
-  }
+  fs.realpath = wrapRealpath(realpath)
+  fs.realpath.native = wrapRealpath(realpath.native)
+
+  fs.promises.realpath = util.promisify(fs.realpath.native)
 
   const {exists} = fs
   fs.exists = function(p, callback) {
@@ -236,10 +253,15 @@ exports.wrapFsWithAsar = function(fs) {
     if (!isAsar)
       return exists(p, callback)
     process.nextTick(function() {
-      // Disabled due to false positive in StandardJS
-      // eslint-disable-next-line standard/no-callback-literal
       callback(process.asarArchive.stat(filePath) !== false)
     })
+  }
+
+  fs.exists[util.promisify.custom] = function(p) {
+    const [isAsar, filePath] = splitPath(p)
+    if (!isAsar)
+      return exists[util.promisify.custom](p)
+    return Promise.resolve(process.asarArchive.stat(filePath) !== false)
   }
 
   const {existsSync} = fs
@@ -275,6 +297,8 @@ exports.wrapFsWithAsar = function(fs) {
       callback()
     })
   }
+
+  fs.promises.access = util.promisify(fs.access)
 
   const {accessSync} = fs
   fs.accessSync = function(p, mode) {
@@ -345,6 +369,15 @@ exports.wrapFsWithAsar = function(fs) {
     })
   }
 
+  const {readFilePromise} = fs.promises
+  fs.promises.readFile = function(p, options) {
+    const [isAsar, filePath] = splitPath(p)
+    if (!isAsar)
+      return readFilePromise.apply(this, arguments)
+
+    return util.promisify(fs.readFile)(p,options)
+  }
+
   const {readFileSync} = fs
   fs.readFileSync = function(p, options) {
     const [isAsar, filePath] = splitPath(p)
@@ -397,6 +430,8 @@ exports.wrapFsWithAsar = function(fs) {
       callback(null, files)
     })
   }
+
+  fs.promises.readdir = util.promisify(fs.readdir)
 
   const {readdirSync} = fs
   fs.readdirSync = function(p) {
