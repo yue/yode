@@ -110,22 +110,29 @@ describe('node', function() {
     assert.equal(result.stdout.toString().trim(), p)
   })
 
-  it('start with asar with async fs', async () => {
+  it('start with asar with offset', async () => {
+    const result = await packageAndRun('fs_async', changeOffset)
+    assert.equal(result.status, 0)
+    assert.ok(result.stdout.toString().includes('fs.readFile(__filename'))
+  })
+
+  it('async fs works on asar', async () => {
     const result = await packageAndRun('fs_async')
     assert.equal(result.status, 0)
     assert.ok(result.stdout.toString().includes('fs.readFile(__filename'))
   })
 
-  it('start with asar with promise fs', async () => {
+  it('promise fs works on asar', async () => {
     const result = await packageAndRun('fs_promise')
     assert.equal(result.status, 0)
     assert.ok(result.stdout.toString().includes('fs.readFile(__filename'))
   })
 
-  it('start with asar with offset', async () => {
-    const result = await packageAndRun('fs_async', changeOffset)
+  it('fs.realpathSync works on dir in asar', async () => {
+    const result = await packageAndRun('fs_realpath_dir')
+    console.log(result.stderr.toString())
     assert.equal(result.status, 0)
-    assert.ok(result.stdout.toString().includes('fs.readFile(__filename'))
+    assert.ok(result.stdout.toString().endsWith(path.join('asar', 'dir')));
   })
 
   it('Promise can resolve', async () => {

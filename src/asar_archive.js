@@ -81,8 +81,8 @@ class AsarArchive {
     const node = this.getNode(filePath)
     if (!node)
       return null
-    if (node.files)
-      return null
+    if (node.files)  // dir
+      return { path: filePath, unpacked: node.unpacked }
     if (node.link)
       return this.getFileInfo(node.link)
     const info = { path: filePath, size: node.size }
@@ -96,6 +96,8 @@ class AsarArchive {
   readFile(info) {
     if (info.unpacked)
       throw new Error('Should not use readFile for unpacked path')
+    if (typeof info.size != 'number')
+      throw new Error('readFile only works on file')
     const buffer = Buffer.alloc(info.size)
     const fd = fs.openSync(process.execPath, 'r')
     try {
@@ -109,6 +111,8 @@ class AsarArchive {
   }
 
   copyFileOut(info) {
+    if (typeof info.size != 'number')
+      throw new Error('copyFileOut only works on file')
     if (this.tmpFiles[info.path])
       return this.tmpFiles[info.path]
     if (info.unpacked)
