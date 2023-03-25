@@ -369,7 +369,7 @@ exports.wrapFsWithAsar = function(fs) {
     })
   }
 
-  const {readFilePromise} = fs.promises
+  const readFilePromise = fs.promises.readFile
   fs.promises.readFile = function(p, options) {
     const [isAsar, filePath] = splitPath(p)
     if (!isAsar)

@@ -130,7 +130,6 @@ describe('node', function() {
 
   it('fs.realpathSync works on dir in asar', async () => {
     const result = await packageAndRun('fs_realpath_dir')
-    console.log(result.stderr.toString())
     assert.equal(result.status, 0)
     assert.ok(result.stdout.toString().endsWith(path.join('asar', 'dir')));
   })
