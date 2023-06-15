@@ -13,6 +13,7 @@ if (require.main == module) {
 }
 
 const assert = require('assert')
+const cp = require('child_process')
 const path = require('path')
 const fs = require('fs')
 const asar = require('../deps/asar')
@@ -71,7 +72,7 @@ describe('node', function() {
       fs.unlinkSync(p)
     })
 
-    const child = require('child_process').fork(p)
+    const child = cp.fork(p)
     let sent = false
     child.on('message', (msg) => {
       assert.equal(msg, 'ok')
@@ -91,7 +92,7 @@ describe('node', function() {
       fs.unlinkSync(p)
     })
 
-    const child = require('child_process').fork(p)
+    const child = cp.fork(p)
     child.on('exit', (code) => {
       assert.equal(code, 123)
       done()
@@ -110,7 +111,8 @@ describe('node', function() {
     assert.equal(result.stdout.toString().trim(), p)
   })
 
-  it('start with asar with offset', async () => {
+  it('start with asar with offset', async function() {
+    this.timeout(10 * 1000)
     const result = await packageAndRun('fs_async', changeOffset)
     assert.equal(result.status, 0)
     assert.ok(result.stdout.toString().includes('fs.readFile(__filename'))
@@ -144,12 +146,19 @@ async function packageAndRun(filename, modifyBinary = null) {
   await asar.createPackage(path.join(__dirname, 'asar_' + filename), a)
   const p = path.join(__dirname, '..', `${filename}_${path.basename(process.execPath)}`)
   fs.writeFileSync(p, fs.readFileSync(process.execPath))
-  if (modifyBinary)
+  if (modifyBinary) {
+    if (process.platform == 'darwin')
+      cp.execSync(`codesign --remove-signature ${p}`)
     modifyBinary(p)
+  }
   fs.appendFileSync(p, fs.readFileSync(a))
   appendMeta(p, a)
   fs.chmodSync(p, 0o755)
-  const result = require('child_process').spawnSync(p)
+  if (modifyBinary && process.platform == 'darwin') {
+    await require('./mac').extendStringTableSize(p)
+    cp.execSync(`codesign --sign - ${p}`)
+  }
+  const result = cp.spawnSync(p)
   if (result.status !== null) {
     // Will be left for debugging if failed to run.
     fs.unlinkSync(a)

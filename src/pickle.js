@@ -64,7 +64,7 @@ var PickleIterator = (function () {
     if (method != null) {
       return method.call(this.payload, readPayloadOffset, length)
     } else {
-      return this.payload.slice(readPayloadOffset, readPayloadOffset + length)
+      return this.payload.subarray(readPayloadOffset, readPayloadOffset + length)
     }
   }
 
@@ -116,7 +116,7 @@ var Pickle = (function () {
   }
 
   Pickle.prototype.initEmpty = function () {
-    this.header = new Buffer(0)
+    this.header = Buffer.alloc(0)
     this.headerSize = SIZE_UINT32
     this.capacityAfterHeader = 0
     this.writeOffset = 0
@@ -136,7 +136,7 @@ var Pickle = (function () {
       this.headerSize = 0
     }
     if (this.headerSize === 0) {
-      this.header = new Buffer(0)
+      this.header = Buffer.alloc(0)
     }
   }
 
@@ -145,7 +145,7 @@ var Pickle = (function () {
   }
 
   Pickle.prototype.toBuffer = function () {
-    return this.header.slice(0, this.headerSize + this.getPayloadSize())
+    return this.header.subarray(0, this.headerSize + this.getPayloadSize())
   }
 
   Pickle.prototype.writeBool = function (value) {
@@ -212,7 +212,7 @@ var Pickle = (function () {
 
   Pickle.prototype.resize = function (newCapacity) {
     newCapacity = alignInt(newCapacity, PAYLOAD_UNIT)
-    this.header = Buffer.concat([this.header, new Buffer(newCapacity)])
+    this.header = Buffer.concat([this.header, Buffer.alloc(newCapacity)])
     this.capacityAfterHeader = newCapacity
   }
 

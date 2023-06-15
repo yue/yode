@@ -71,7 +71,9 @@ function wrapWithActivateUvLoop(func) {
     // Redirect Node to execute from current ASAR archive, using a virtual
     // "asar" directory as root.
     return require('path').join(execPath, 'asar')
-  } catch (e) {
+  } catch (error) {
     // Not an ASAR archive, continue to Node's default routine.
+    if (error.message != 'Not an ASAR archive')
+      throw error
   }
 })

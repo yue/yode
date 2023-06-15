@@ -7,7 +7,10 @@
 #include <stdlib.h>
 
 #include "node/src/env-inl.h"
+#include "node/src/node_errors.h"
 #include "src/node_integration.h"
+
+using node::errors::TryCatchScope;
 
 namespace yode {
 
@@ -59,6 +62,7 @@ void Bootstrap(const v8::FunctionCallbackInfo<v8::Value>& args) {
   for (int i = 0; i < args.Length(); ++i)
     bootstrap_args[i] = args[i];
   bootstrap_args.push_back(ToV8(env, env->exec_path().c_str()));
+  TryCatchScope try_catch(env, TryCatchScope::CatchMode::kFatal);
   v8::MaybeLocal<v8::Value> ret =
       bootstrap->Call(env->context(), exports,
                       bootstrap_args.size(), bootstrap_args.data());
