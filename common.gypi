@@ -73,15 +73,15 @@
     'v8_random_seed': 0,
     'v8_trace_maps': 0,
     'v8_use_siphash': 1,
-    'icu_data_file': 'icudt72l.dat',
-    'icu_data_in': '../../deps/icu-tmp/icudt72l.dat',
+    'icu_data_file': 'icudt73l.dat',
+    'icu_data_in': '../../deps/icu-tmp/icudt73l.dat',
     'icu_default_data': '',
     'icu_endianness': 'l',
     'icu_gyp_path': 'node/tools/icu/icu-generic.gyp',
     'icu_locales': 'en,root',
     'icu_path': '../../deps/icu-small',
     'icu_small': 'true',
-    'icu_ver_major': '72',
+    'icu_ver_major': '73',
   },
   'target_defaults': {
     'includes': [
@@ -119,7 +119,7 @@
           'node/deps/icu-small/source/tools/toolutil',
         ],
       }],
-      ['_target_name in ["libuv", "http_parser", "openssl", "openssl-cli", "cares", "libnode", "nghttp2", "zlib", "mksnapshot", "genrb", "genccode"] or _target_name.startswith("v8") or _target_name.startswith("icu") or _target_name.startswith("node")', {
+      ['_target_name in ["libuv", "http_parser", "openssl", "openssl-cli", "cares", "libnode", "nghttp2", "zlib", "mksnapshot", "genrb", "genccode", "simdutf"] or _target_name.startswith("v8") or _target_name.startswith("icu") or _target_name.startswith("node") or _target_name.startswith("torque")', {
         # Suppress all the warnings in Node.
         'msvs_settings': {
           'VCCLCompilerTool': {
@@ -158,6 +158,7 @@
           '-Wno-inconsistent-missing-override',
         ],
         'cflags_c': [
+          '-Wno-deprecated-non-prototype',
           '-Wno-implicit-function-declaration',
         ],
         'cflags!': [

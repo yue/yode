@@ -4,7 +4,7 @@
 
 #include "src/node_integration_win.h"
 
-#include "node/deps/uv/src/uv-common.h"
+#include "node/deps/uv/include/uv.h"
 
 // http://blogs.msdn.com/oldnewthing/archive/2004/10/25/247180.aspx
 extern "C" IMAGE_DOS_HEADER __ImageBase;

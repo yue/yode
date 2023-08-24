@@ -29,10 +29,11 @@
         'node/src',  # for node things
       ],
       'defines': [
+        'NODE_HAVE_I18N_SUPPORT=1',
         'NODE_WANT_INTERNALS=1',
+        'NODE_SHARED_MODE',
         'HAVE_OPENSSL=1',
         'HAVE_INSPECTOR=1',
-        'NODE_SHARED_MODE',
       ],
       'dependencies': [
         'yode_js2c#host',

@@ -15,7 +15,7 @@ function wrapWithActivateUvLoop(func) {
   delete process.bootstrap
 
   // The |require| here is actually |nativeModuleRequire|.
-  const {BuiltinModule, internalBinding, require} = internalRequire('internal/bootstrap/loaders')
+  const {BuiltinModule, internalBinding, require} = internalRequire('internal/bootstrap/realm')
 
   // Make async method work.
   const timers = require('timers')
@@ -60,13 +60,8 @@ function wrapWithActivateUvLoop(func) {
     const AsarArchive = require('asar_archive')
     process.asarArchive = new AsarArchive(execPath/* REPLACE_WITH_OFFSET */)
 
-    // If it is (i.e. no exception), then patch the fs module after bootstrap
-    // is over.
-    process.finishBootstrap = () => {
-      delete process.finishBootstrap
-      // Monkey patch built-in modules.
-      require('asar_monkey_patch').wrapFsWithAsar(require('fs'))
-    }
+    // Monkey patch built-in modules.
+    require('asar_monkey_patch').wrapFsWithAsar(require('fs'))
 
     // Redirect Node to execute from current ASAR archive, using a virtual
     // "asar" directory as root.
