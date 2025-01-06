@@ -23,9 +23,6 @@ namespace {
 // The global instance of NodeIntegration.
 std::unique_ptr<NodeIntegration> g_node_integration;
 
-// Has we run message loop before.
-bool g_first_runloop = true;
-
 // Untility function to create a V8 string.
 inline v8::Local<v8::String> ToV8(node::Environment* env, const char* str) {
   return v8::String::NewFromUtf8(
@@ -34,15 +31,23 @@ inline v8::Local<v8::String> ToV8(node::Environment* env, const char* str) {
 
 // Force running uv loop.
 void ActivateUvLoop(const v8::FunctionCallbackInfo<v8::Value>& args) {
-  g_node_integration->CallNextTick();
+  if (g_node_integration)
+    g_node_integration->CallNextTick();
 }
 
 // Invoke our bootstrap script.
-void Bootstrap(const v8::FunctionCallbackInfo<v8::Value>& args) {
-  node::Environment* env = node::Environment::GetCurrent(args);
-  CHECK(env);
+void Bootstrap(node::Environment* env,
+               v8::Local<v8::Value> process,
+               v8::Local<v8::Value> require) {
+  // Set native methods.
+  node::SetMethod(
+      env->context(), env->process_object(), "activateUvLoop", &ActivateUvLoop);
+  // Set process.versions.yode.
+  v8::Local<v8::Value> versions = env->process_object()->Get(
+      env->context(), ToV8(env, "versions")).ToLocalChecked();
+  versions.As<v8::Object>()->Set(
+      env->context(), ToV8(env, "yode"), ToV8(env, "0.11.1")).ToChecked();
   // Initialize GUI after Node gets initialized.
-  v8::HandleScope handle_scope(env->isolate());
   Init(env);
   // Put our scripts into |exports|.
   v8::Local<v8::Object> exports = v8::Object::New(env->isolate());
@@ -58,14 +63,12 @@ void Bootstrap(const v8::FunctionCallbackInfo<v8::Value>& args) {
   v8::Local<v8::Function> bootstrap =
       v8::Local<v8::Function>::Cast(result.ToLocalChecked());
   // Invoke the |bootstrap| with |exports|.
-  std::vector<v8::Local<v8::Value>> bootstrap_args(args.Length());
-  for (int i = 0; i < args.Length(); ++i)
-    bootstrap_args[i] = args[i];
-  bootstrap_args.push_back(ToV8(env, env->exec_path().c_str()));
+  std::vector<v8::Local<v8::Value>> args = { process, require, exports };
   TryCatchScope try_catch(env, TryCatchScope::CatchMode::kFatal);
-  v8::MaybeLocal<v8::Value> ret =
-      bootstrap->Call(env->context(), exports,
-                      bootstrap_args.size(), bootstrap_args.data());
+  v8::MaybeLocal<v8::Value> ret = bootstrap->Call(env->context(),
+                                                  env->context()->Global(),
+                                                  args.size(),
+                                                  args.data());
   // Change process.argv if the binary starts itself.
   v8::Local<v8::Value> r;
   if (ret.ToLocal(&r) && r->IsString()) {
@@ -74,59 +77,96 @@ void Bootstrap(const v8::FunctionCallbackInfo<v8::Value>& args) {
   }
 }
 
-// Inject custom bindings.
-bool InitWrapper(node::Environment* env) {
-  // Native methods.
-  node::SetMethod(
-      env->context(), env->process_object(), "bootstrap", &Bootstrap);
-  node::SetMethod(
-      env->context(), env->process_object(), "activateUvLoop", &ActivateUvLoop);
-  // process.versions.yode
-  v8::Local<v8::Value> versions = env->process_object()->Get(
-      env->context(), ToV8(env, "versions")).ToLocalChecked();
-  versions.As<v8::Object>()->Set(
-      env->context(), ToV8(env, "yode"), ToV8(env, "0.11.0")).ToChecked();
-  env->process_object()->DefineOwnProperty(
-      env->context(), ToV8(env, "versions"), versions, v8::ReadOnly).Check();
-  return true;
-}
+// Like SpinEventLoop but replaces the uv_run with RunLoop.
+int SpinGUIEventLoop(node::Environment* env) {
+  env->set_trace_sync_io(env->options()->trace_sync_io);
 
-bool RunLoopWrapper(node::Environment* env) {
-  // Run uv loop for once before entering GUI message loop.
-  if (g_first_runloop) {
-    g_node_integration->UvRunOnce();
-    g_first_runloop = false;
-  }
   // Run GUI message loop.
   RunLoop(env);
   // No need to keep uv loop alive.
   g_node_integration->ReleaseHandleRef();
   // Enter uv loop to handle unfinished uv tasks.
-  return uv_run(env->event_loop(), UV_RUN_DEFAULT);
+  uv_run(env->event_loop(), UV_RUN_DEFAULT);
+
+  node::EmitProcessBeforeExit(env);
+  env->set_trace_sync_io(false);
+  env->ForEachRealm([](auto* realm) { realm->VerifyNoStrongBaseObjects(); });
+  auto exit_code = node::EmitProcessExitInternal(env);
+  return static_cast<int>(
+      exit_code.FromMaybe(node::ExitCode::kGenericUserError));
 }
 
 }  // namespace
 
 int Start(int argc, char* argv[]) {
-  const char* run_as_node = getenv("YODE_RUN_AS_NODE");
-  if (!run_as_node || strcmp(run_as_node, "1")) {
-    // Prepare node integration.
-    g_node_integration.reset(NodeIntegration::Create());
-    g_node_integration->Init();
-
-    // Make Node use our message loop.
-    node::SetRunLoop(&InitWrapper, &RunLoopWrapper);
-  }
-
   // Always enable GC this app is almost always running on desktop.
   v8::V8::SetFlagsFromString("--expose_gc", 11);
 
-  // Start node and enter message loop.
-  int code = node::Start(argc, argv);
+  // Set up per-process state.
+  std::vector<std::string> args(argv, argv + argc);
+  auto init = node::InitializeOncePerProcess(args);
 
-  // Clean up node integration and quit.
-  g_node_integration.reset();
-  return code;
+  // Initialize V8.
+  auto* platform = init->platform();
+  std::unique_ptr<node::ArrayBufferAllocator> array_buffer_allocator(
+      node::ArrayBufferAllocator::Create());
+  auto isolate_params = std::make_unique<v8::Isolate::CreateParams>();
+  isolate_params->array_buffer_allocator = array_buffer_allocator.get();
+  v8::Isolate* isolate = node::NewIsolate(isolate_params.get(),
+                                          uv_default_loop(),
+                                          platform);
+  std::unique_ptr<node::IsolateData> isolate_data(node::CreateIsolateData(
+      isolate,
+      uv_default_loop(),
+      platform,
+      array_buffer_allocator.get(),
+      nullptr));
+  isolate_data->max_young_gen_size =
+      isolate_params->constraints.max_young_generation_size_in_bytes();
+
+  int exit_code = 0;
+  {
+    // Create environment.
+    v8::Locker locker(isolate);
+    v8::Isolate::Scope isolate_scope(isolate);
+    v8::HandleScope handle_scope(isolate);
+    v8::Local<v8::Context> context = node::NewContext(isolate);
+    v8::Context::Scope context_scope(context);
+    node::DeleteFnPtr<node::Environment, node::FreeEnvironment> env(
+        node::CreateEnvironment(isolate_data.get(),
+                                context,
+                                init->args(),
+                                init->exec_args()));
+
+    // Check if this process should run GUI event loop.
+    const char* run_as_node = getenv("YODE_RUN_AS_NODE");
+    if (!run_as_node || strcmp(run_as_node, "1")) {
+      g_node_integration.reset(NodeIntegration::Create());
+      g_node_integration->Init();
+    }
+
+    // Load bootstrap script.
+    if (g_node_integration)
+      env->set_embedder_preload(&Bootstrap);
+
+    // Load node.
+    {
+      node::LoadEnvironment(env.get(), node::StartExecutionCallback{});
+      // Enter event loop.
+      if (g_node_integration) {
+        g_node_integration->UvRunOnce();
+        exit_code = SpinGUIEventLoop(env.get());
+      } else {
+        exit_code = node::SpinEventLoop(env.get()).FromMaybe(1);
+      }
+    }
+    node::Stop(env.get());
+  }
+  isolate_data.reset();
+  platform->UnregisterIsolate(isolate);
+  isolate->Dispose();
+  node::TearDownOncePerProcess();
+  return exit_code;
 }
 
 }  // namespace yode

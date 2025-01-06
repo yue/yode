@@ -64,6 +64,9 @@
           },
         }],
         ['OS=="win"', {
+          'defines': [
+            'NOMINMAX',
+          ],
           'sources': [
             'src/yode.rc',
             'deps/node.def',
