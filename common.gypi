@@ -91,6 +91,11 @@
       'node/deps/v8/include',
     ],
     'target_conditions': [
+      ['_target_name=="libnode"', {
+        'defines': [
+          'DISABLE_SINGLE_EXECUTABLE_APPLICATION',
+        ],
+      }],
       ['_target_name=="libnode" and OS=="win"', {
         # Force loading all objects of node, otherwise some built-in modules
         # won't load.
