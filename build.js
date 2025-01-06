@@ -1,37 +1,30 @@
-#!/usr/bin/env node
+#!/usr/bin/env zx
 
-const fs = require('fs')
-const path = require('path')
-const os = require('os')
-const cp = require('child_process')
+$.verbose = argv.verbose
 
-const host_arch = os.arch()
+const hostArch = os.arch()
 
 // Parse args.
-let cc_wrapper
-let build_type = 'Release'
-let target_arch = host_arch
-for (const arg of process.argv.slice(2)) {
-  if (arg.startsWith('--cc-wrapper='))
-    cc_wrapper = arg.substr(arg.indexOf('=') + 1)
-  else if (arg in ['Debug', 'Release'])
-    build_type = arg
-  else if (!arg.startsWith('-'))
-    target_arch = arg
+let buildType = 'Release'
+let targetArch = hostArch
+for (const arg of argv._) {
+  if (arg in ['Debug', 'Release'])
+    buildType = arg
+  else
+    targetArch = arg
 }
 
 // Current version.
-const version = commandResult('git describe --always --tags')
+const version = await $`git describe --always --tags`
 
 // Sync submodule.
-execSync('git submodule sync --recursive', {stdio: null})
-execSync('git submodule update --init --recursive', {stdio: null})
+await $`git submodule sync --recursive`
+await $`git submodule update --init --recursive`
 
 // Find out where VS is installed.
-if (process.platform === 'win32') {
-  const vswhere = path.join(process.env['ProgramFiles(x86)'], 'Microsoft Visual Studio', 'Installer', 'vswhere.exe')
-  const args = ['-format', 'json']
-  const result = JSON.parse(String(cp.execFileSync(vswhere, args)))
+if (process.platform == 'win32') {
+  const vswhere = `${process.env['ProgramFiles(x86)']}/Microsoft Visual Studio/Installer/vswhere.exe`
+  const result = JSON.parse(await $`${vswhere} -format json`)
   if (result.length == 0)
     throw new Error('Unable to find Visual Studio')
   const vs = result[0]
@@ -40,53 +33,63 @@ if (process.platform === 'win32') {
 }
 
 // Required for cross compilation on macOS.
-if (host_arch !== target_arch && process.platform === 'darwin') {
+if (hostArch != targetArch && process.platform == 'darwin') {
   process.env.GYP_CROSSCOMPILE = '1'
   Object.assign(process.env, {
-    CC: `cc -arch ${target_arch}`,
-    CXX: `c++ -arch ${target_arch}`,
-    CC_target: `cc -arch ${target_arch}`,
-    CXX_target: `c++ -arch ${target_arch}`,
+    CC: `cc -arch ${targetArch}`,
+    CXX: `c++ -arch ${targetArch}`,
+    CC_target: `cc -arch ${targetArch}`,
+    CXX_target: `c++ -arch ${targetArch}`,
     CC_host: 'cc -arch x86_64',
     CXX_host: 'c++ -arch x86_64',
   })
 }
 
-// Handle wrapper.
-if (cc_wrapper) {
+// Handle ccache.
+try {
+  const ccache = await which('ccache')
   Object.assign(process.env, {
-    'CC_wrapper': cc_wrapper,
-    'CXX_wrapper': cc_wrapper,
-    'CC.host_wrapper': cc_wrapper,
-    'CXX.host_wrapper': cc_wrapper,
+    'CC_wrapper': ccache,
+    'CXX_wrapper': ccache,
+    'CC.host_wrapper': ccache,
+    'CXX.host_wrapper': ccache,
   })
-}
+} catch {}
 
 // Find Python 3
-const python = findPython3()
+let python = 'python'
+for (const p of ['python', 'python3']) {
+  try {
+    const version = await $`${p} --version`
+    if (version.startsWith('Python 3')) {
+      python = p
+      break
+    }
+  } catch (error) {}
+}
 
 // Generate some dynamic gyp files.
 const configureArgs = [
   '--with-intl=small-icu',
   '--without-node-code-cache',
   '--openssl-no-asm',
-  `--dest-cpu=${target_arch}`,
+  `--dest-cpu=${targetArch}`,
 ]
-execSync(`${python} configure ${configureArgs.join(' ')}`, {cwd: 'node'})
+await $({cwd: 'node'})`${python} configure.py ${configureArgs}`
 
 // Update the build configuration.
 const config = {
   variables: {
     python,
-    target_arch,
-    host_arch,
-    want_separate_host_toolset: host_arch === target_arch ? 0 : 1,
+    target_arch: targetArch,
+    host_arch: hostArch,
+    want_separate_host_toolset: hostArch == targetArch ? 0 : 1,
   }
 }
-if (process.platform === 'darwin') {
+if (process.platform == 'darwin') {
   // Set SDK version to the latest installed.
-  const sdks = commandResult('xcodebuild -showsdks')
-  const SDKROOT = sdks.match(/-sdk (macosx\d+\.\d+)/)[1]
+  const sdks = await $`xcodebuild -showsdks`
+  const SDKROOT = sdks.stdout.match(/-sdk (macosx\d+\.\d+)/)[1]
   config.xcode_settings = {SDKROOT}
 }
 // Read node_library_files from config.gypi.
@@ -94,59 +97,34 @@ config.variables.node_library_files = readNodeConfigFiles('node_library_files').
 config.variables.node_builtin_shareable_builtins = readNodeConfigFiles('node_builtin_shareable_builtins')
 fs.writeFileSync(path.join(__dirname, 'config.gypi'), JSON.stringify(config, null, '  '))
 
-execSync(`${python} node/tools/gyp/gyp_main.py yode.gyp --no-parallel -f ninja -Dbuild_type=${build_type} -Iconfig.gypi -Icommon.gypi --depth .`)
+await $`${python} node/tools/gyp/gyp_main.py yode.gyp --no-parallel -f ninja -Dbuild_type=${buildType} -Iconfig.gypi -Icommon.gypi --depth .`
 
 // Build.
 process.env.PATH = `${path.join('deps', 'ninja')}${path.delimiter}${process.env.PATH}`
-execSync(`ninja -j ${os.cpus().length} -C out/${build_type} yode`)
+const jobs = argv.j ?? os.cpus().length
+await $`ninja -j ${jobs} -C out/${buildType} yode`
 
-if (process.platform === 'linux')
-  execSync(`strip out/${build_type}/yode`)
+if (process.platform == 'linux')
+  await $`strip out/${buildType}/yode`
 
 // Remove old zip.
-const files = fs.readdirSync(`out/${build_type}`)
+const files = fs.readdirSync(`out/${buildType}`)
 for (let f of files) {
   if (f.endsWith('.zip'))
-    fs.unlinkSync(`out/${build_type}/${f}`)
+    fs.unlinkSync(`out/${buildType}/${f}`)
 }
 
 // Create zip.
 const yazl = require('./deps/yazl')
 const zip = new yazl.ZipFile()
-const distname = `yode-${version}-${process.platform}-${target_arch}.zip`
+const distname = `yode-${version}-${process.platform}-${targetArch}.zip`
 const filename = process.platform == 'win32' ? 'yode.exe' : 'yode'
 zip.addFile('node/LICENSE', 'LICENSE')
-zip.addFile(`out/${build_type}/${filename}`, filename)
-zip.outputStream.pipe(fs.createWriteStream(`out/${build_type}/${distname}`))
+zip.addFile(`out/${buildType}/${filename}`, filename)
+zip.outputStream.pipe(fs.createWriteStream(`out/${buildType}/${distname}`))
 zip.end()
 
 function readNodeConfigFiles(key) {
   const config_gypi = fs.readFileSync(path.join(__dirname, 'node', 'config.gypi')).toString()
   return JSON.parse(config_gypi.split('\n').slice(1).join('\n').replace(/'/g, '"')).variables[key]
-}
-
-function findPython3() {
-  for (const python of ['python', 'python3']) {
-    try {
-      const version = commandResult(`${python} --version`)
-      if (version.startsWith('Python 3'))
-        return python
-    } catch (error) {}
-  }
-  return 'python'
-}
-
-function commandResult(command) {
-  return String(execSync(command, {stdio: null})).trim()
-}
-
-// Wrapper of execSync that prints output.
-function execSync(command, options = {}) {
-  if (options.stdio === undefined)
-    options.stdio = 'inherit'
-  if (options.env)
-    options.env = Object.assign(options.env, options.env)
-  else
-    options.env = Object.assign({}, process.env)
-  return cp.execSync(command, options)
 }

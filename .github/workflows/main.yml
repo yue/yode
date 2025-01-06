@@ -43,27 +43,15 @@ jobs:
           max-size: ${{ matrix.arch == 'arm64' && '3G' || '2G' }}
           key: ccache-${{ matrix.os }}-${{ matrix.arch }}
 
-      - name: Build Posix
-        if: matrix.os == 'linux' || matrix.os == 'mac'
+      - name: Build
         env:
           CCACHE_SLOPPINESS: time_macros
         shell: bash
         run: |
-          set -e
-          if [ "$(uname)" == "Darwin" ]; then
-            WRAPPER=/usr/local/bin/ccache
-          elif [ "$(expr substr $(uname -s) 1 5)" == "Linux" ]; then
-            WRAPPER=/usr/bin/ccache
-          fi
-          node build.js --cc-wrapper=$WRAPPER ${{ matrix.arch }}
-
-      - name: Build Windows
-        if: matrix.os == 'win'
-        run: |
-          node build.js ${{ matrix.arch }}
+          npx zx build.js ${{ matrix.arch }} --verbose
 
       - name: Test
-        if: matrix.arch == 'x64' || matrix.arch == 'ia32'
+        if: matrix.arch == runner.arch
         env:
           DISPLAY: ':99.0'
         run: out/Release/yode test/main.js
