@@ -126,11 +126,16 @@ int Start(int argc, char* argv[]) {
     v8::HandleScope handle_scope(isolate);
     v8::Local<v8::Context> context = node::NewContext(isolate);
     v8::Context::Scope context_scope(context);
+    node::EnvironmentFlags::Flags env_flags =
+        static_cast<node::EnvironmentFlags::Flags>(
+            node::EnvironmentFlags::kDefaultFlags |
+            node::EnvironmentFlags::kHideConsoleWindows);
     node::DeleteFnPtr<node::Environment, node::FreeEnvironment> env(
         node::CreateEnvironment(isolate_data.get(),
                                 context,
                                 init->args(),
-                                init->exec_args()));
+                                init->exec_args(),
+                                env_flags));
 
     // Check if this process should run GUI event loop.
     const char* run_as_node = getenv("YODE_RUN_AS_NODE");
