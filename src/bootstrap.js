@@ -59,7 +59,9 @@ function wrapWithActivateUvLoop(func) {
     require('asar_monkey_patch').wrapFsWithAsar(require('fs'))
 
     // Redirect Node to execute from current ASAR archive.
-    return dirname
+    const {executeUserEntryPoint} = internalRequire('internal/modules/run_main')
+    process.argv.splice(1, 0, dirname)
+    executeUserEntryPoint(dirname)
   } catch (error) {
     // Not an ASAR archive, continue to Node's default routine.
     if (error.message != 'Not an ASAR archive')

@@ -3,7 +3,7 @@ const path = require('path')
 const util = require('util')
 
 // The root dir of asar archive.
-const rootDir = path._makeLong(path.join(execPath, 'asar'))
+const rootDir = path._makeLong(path.join(process.execPath, 'asar'))
 
 // Convert asar archive's Stats object to fs's Stats object.
 let nextInode = 0
@@ -208,7 +208,7 @@ exports.wrapFsWithAsar = function(fs) {
       if (info.unpacked)
         return real
       else
-        return path.join(func(execPath), 'asar', real)
+        return path.join(func(process.execPath), 'asar', real)
     }
   }
 
@@ -232,7 +232,7 @@ exports.wrapFsWithAsar = function(fs) {
       if (info.unpacked) {
         callback(null, real)
       } else {
-        func(execPath, function(err, p) {
+        func(process.execPath, function(err, p) {
           if (err)
             return callback(err)
           return callback(null, path.join(p, 'asar', real))
@@ -358,7 +358,7 @@ exports.wrapFsWithAsar = function(fs) {
     }
 
     const buffer = Buffer.alloc(info.size)
-    fs.open(execPath, 'r', function(error, fd) {
+    fs.open(process.execPath, 'r', function(error, fd) {
       if (error)
         return callback(error)
       fs.read(fd, buffer, 0, info.size, info.offset, function(error) {

@@ -65,16 +65,10 @@ void Bootstrap(node::Environment* env,
   // Invoke the |bootstrap| with |exports|.
   std::vector<v8::Local<v8::Value>> args = { process, require, exports };
   TryCatchScope try_catch(env, TryCatchScope::CatchMode::kFatal);
-  v8::MaybeLocal<v8::Value> ret = bootstrap->Call(env->context(),
-                                                  env->context()->Global(),
-                                                  args.size(),
-                                                  args.data());
-  // Change process.argv if the binary starts itself.
-  v8::Local<v8::Value> r;
-  if (ret.ToLocal(&r) && r->IsString()) {
-    auto& argv = const_cast<std::vector<std::string>&>(env->argv());
-    argv.insert(++argv.begin(), *v8::String::Utf8Value(env->isolate(), r));
-  }
+  bootstrap->Call(env->context(),
+                  env->context()->Global(),
+                  args.size(),
+                  args.data()).ToLocalChecked();
 }
 
 // Like SpinEventLoop but replaces the uv_run with RunLoop.
@@ -145,13 +139,11 @@ int Start(int argc, char* argv[]) {
       g_node_integration->Init();
     }
 
-    // Load bootstrap script.
-    if (g_node_integration)
-      env->set_embedder_preload(&Bootstrap);
-
     // Load node.
     {
-      node::LoadEnvironment(env.get(), node::StartExecutionCallback{});
+      node::LoadEnvironment(env.get(),
+                            node::StartExecutionCallback{},
+                            g_node_integration ? &Bootstrap : nullptr);
       // Enter event loop.
       if (g_node_integration) {
         g_node_integration->UvRunOnce();
