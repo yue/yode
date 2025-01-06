@@ -15,7 +15,7 @@ for (const arg of argv._) {
 }
 
 // Current version.
-const version = await $`git describe --always --tags`
+const version = (await $`git describe --always --tags`).valueOf()
 
 // Sync submodule.
 await $`git submodule sync --recursive`
@@ -122,11 +122,10 @@ for (let f of files) {
 }
 
 // Create zip.
-const yazl = require('./deps/yazl')
-const zip = new yazl.ZipFile()
-const distname = `yode-${version}-${process.platform}-${targetArch}.zip`
+const distname = `out/${buildType}/yode-${version}-${process.platform}-${targetArch}.zip`
 const filename = process.platform == 'win32' ? 'yode.exe' : 'yode'
-zip.addFile('node/LICENSE', 'LICENSE')
-zip.addFile(`out/${buildType}/${filename}`, filename)
-zip.outputStream.pipe(fs.createWriteStream(`out/${buildType}/${distname}`))
-zip.end()
+await fs.emptyDir('dist')
+await fs.copy('node/LICENSE', 'dist/LICENSE')
+await fs.copy(`out/${buildType}/${filename}`, `dist/${filename}`)
+await $`${python} -c "import shutil; shutil.make_archive('${distname}', 'zip', 'dist')"`
+await fs.remove('dist')
