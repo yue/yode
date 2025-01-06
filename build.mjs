@@ -92,17 +92,23 @@ if (process.platform == 'darwin') {
   const SDKROOT = sdks.stdout.match(/-sdk (macosx\d+\.\d+)/)[1]
   config.xcode_settings = {SDKROOT}
 }
+// Copy fields from config.gypi of node.
+const configGypiPath = fs.readFileSync(path.join(__dirname, 'node', 'config.gypi')).toString()
+const configGypi = JSON.parse(configGypiPath.split('\n').slice(1).join('\n').replace(/'/g, '"'))
+for (const key of ['clang', 'node_builtin_shareable_builtins']) {
+  config.variables[key] = configGypi.variables[key]
+}
 // Read node_library_files from config.gypi.
-config.variables.node_library_files = readNodeConfigFiles('node_library_files').map(l => 'node/' + l)
-config.variables.node_builtin_shareable_builtins = readNodeConfigFiles('node_builtin_shareable_builtins')
-fs.writeFileSync(path.join(__dirname, 'config.gypi'), JSON.stringify(config, null, '  '))
+config.variables.node_library_files = configGypi.variables.node_library_files.map(l => 'node/' + l)
+fs.writeFileSync(`${__dirname}/config.gypi`, JSON.stringify(config, null, '  '))
 
 await $`${python} node/tools/gyp/gyp_main.py yode.gyp --no-parallel -f ninja -Dbuild_type=${buildType} -Iconfig.gypi -Icommon.gypi --depth .`
 
 // Build.
-process.env.PATH = `${path.join('deps', 'ninja')}${path.delimiter}${process.env.PATH}`
+const ninja = process.platform == 'win32' ? 'deps/ninja/ninja.exe'
+                                          : 'deps/ninja/ninja'
 const jobs = argv.j ?? os.cpus().length
-await $`ninja -j ${jobs} -C out/${buildType} yode`
+await $`${ninja} -j ${jobs} -C out/${buildType} yode`
 
 if (process.platform == 'linux')
   await $`strip out/${buildType}/yode`
@@ -123,8 +129,3 @@ zip.addFile('node/LICENSE', 'LICENSE')
 zip.addFile(`out/${buildType}/${filename}`, filename)
 zip.outputStream.pipe(fs.createWriteStream(`out/${buildType}/${distname}`))
 zip.end()
-
-function readNodeConfigFiles(key) {
-  const config_gypi = fs.readFileSync(path.join(__dirname, 'node', 'config.gypi')).toString()
-  return JSON.parse(config_gypi.split('\n').slice(1).join('\n').replace(/'/g, '"')).variables[key]
-}
