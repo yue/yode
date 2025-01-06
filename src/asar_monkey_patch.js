@@ -149,21 +149,29 @@ function overrideAPI(module, name, arg = 0) {
 // Override fs APIs.
 exports.wrapFsWithAsar = function(fs) {
   const {lstatSync} = fs
-  fs.lstatSync = function(p) {
+  fs.lstatSync = function(p, options) {
     const [isAsar, filePath] = splitPath(p)
     if (!isAsar)
-      return lstatSync(p)
+      return lstatSync(p, options)
     const stats = process.asarArchive.stat(filePath)
-    if (!stats)
-      notFoundError(filePath)
+    if (!stats) {
+      if (options?.throwIfNoEntry)
+        notFoundError(filePath)
+      else
+        return undefined
+    }
     return generateStats(stats)
   }
 
   const {lstat} = fs
-  fs.lstat = function(p, callback) {
+  fs.lstat = function(p, options, callback) {
+    if (typeof options == 'function') {
+      callback = options
+      options = {}
+    }
     const [isAsar, filePath] = splitPath(p)
     if (!isAsar)
-      return lstat(p, callback)
+      return lstat(p, options, callback)
     const stats = process.asarArchive.stat(filePath)
     if (!stats)
       return notFoundError(filePath, callback)
@@ -175,29 +183,33 @@ exports.wrapFsWithAsar = function(fs) {
   fs.promises.lstat = util.promisify(fs.lstat)
 
   const {statSync} = fs
-  fs.statSync = function(p) {
+  fs.statSync = function(p, options) {
     const [isAsar] = splitPath(p)
     if (!isAsar)
-      return statSync(p)
+      return statSync(p, options)
     // Do not distinguish links for now.
-    return fs.lstatSync(p)
+    return fs.lstatSync(p, options)
   }
 
   const {stat} = fs
-  fs.stat = function(p, callback) {
+  fs.stat = function(p, options, callback) {
+    if (typeof options == 'function') {
+      callback = options
+      options = {}
+    }
     const [isAsar] = splitPath(p)
     if (!isAsar)
-      return stat(p, callback)
+      return stat(p, options, callback)
     // Do not distinguish links for now.
     process.nextTick(function() {
-      fs.lstat(p, callback)
+      fs.lstat(p, options, callback)
     })
   }
 
   fs.promises.stat = util.promisify(fs.lstat)
 
   const wrapRealpathSync = function(func) {
-    return function(p) {
+    return function(p, options) {
       const [isAsar, filePath] = splitPath(p)
       if (!isAsar)
         return func.apply(this, arguments)
@@ -208,7 +220,7 @@ exports.wrapFsWithAsar = function(fs) {
       if (info.unpacked)
         return real
       else
-        return path.join(func(process.execPath), 'asar', real)
+        return path.join(func(process.execPath, options), 'asar', real)
     }
   }
 
@@ -217,13 +229,13 @@ exports.wrapFsWithAsar = function(fs) {
   fs.realpathSync.native = wrapRealpathSync(realpathSync.native);
 
   const wrapRealpath = function(func) {
-    return function(p, cache, callback) {
+    return function(p, options, callback) {
       const [isAsar, filePath] = splitPath(p)
       if (!isAsar)
         return func.apply(this, arguments)
-      if (typeof cache === 'function') {
-        callback = cache
-        cache = undefined
+      if (arguments.length < 3) {
+        callback = options
+        options = {}
       }
       const info = process.asarArchive.getFileInfo(filePath)
       if (!info)
@@ -232,7 +244,7 @@ exports.wrapFsWithAsar = function(fs) {
       if (info.unpacked) {
         callback(null, real)
       } else {
-        func(process.execPath, function(err, p) {
+        func(process.execPath, options, function(err, p) {
           if (err)
             return callback(err)
           return callback(null, path.join(p, 'asar', real))
@@ -419,10 +431,16 @@ exports.wrapFsWithAsar = function(fs) {
   }
 
   const {readdir} = fs
-  fs.readdir = function(p, callback) {
+  fs.readdir = function(p, options, callback) {
     const [isAsar, filePath] = splitPath(p)
     if (!isAsar)
       return readdir.apply(this, arguments)
+    if (typeof options == 'function') {
+      callback = options
+      options = {}
+    } else if (typeof options == 'object') {
+      throw new Error('fs.readdir with options is not supported for ASAR')
+    }
     const files = process.asarArchive.readdir(filePath)
     if (!files)
       return notFoundError(filePath, callback)
@@ -434,10 +452,12 @@ exports.wrapFsWithAsar = function(fs) {
   fs.promises.readdir = util.promisify(fs.readdir)
 
   const {readdirSync} = fs
-  fs.readdirSync = function(p) {
+  fs.readdirSync = function(p, options) {
     const [isAsar, filePath] = splitPath(p)
     if (!isAsar)
       return readdirSync.apply(this, arguments)
+    if (typeof options == 'object')
+      throw new Error('fs.readdir with options is not supported for ASAR')
     const files = process.asarArchive.readdir(filePath)
     if (!files)
       notFoundError(filePath)
@@ -482,22 +502,23 @@ exports.wrapFsWithAsar = function(fs) {
   // widely used.
   if (process.platform === 'win32') {
     const {mkdir} = fs
-    fs.mkdir = function(p, mode, callback) {
-      if (typeof mode === 'function') {
-        callback = mode
+    fs.mkdir = function(p, options, callback) {
+      if (typeof options == 'function') {
+        callback = options
+        options = {}
       }
       const [isAsar, filePath] = splitPath(p)
       if (isAsar && filePath.length)
         return notDirError(callback)
-      mkdir(p, mode, callback)
+      mkdir(p, options, callback)
     }
 
     const {mkdirSync} = fs
-    fs.mkdirSync = function(p, mode) {
+    fs.mkdirSync = function(p, options) {
       const [isAsar, filePath] = splitPath(p)
       if (isAsar && filePath.length)
         return notDirError()
-      return mkdirSync(p, mode)
+      return mkdirSync(p, options)
     }
   }
 

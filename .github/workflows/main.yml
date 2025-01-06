@@ -56,6 +56,7 @@ jobs:
       - name: Upload Binary Files
         uses: actions/upload-artifact@v4
         with:
+          name: yode-${{ matrix.os }}-${{ matrix.arch }}
           path: out/Release/*.zip
           retention-days: 1
 
