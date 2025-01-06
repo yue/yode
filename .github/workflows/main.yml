@@ -37,18 +37,15 @@ jobs:
           python-version: '3.11'
 
       - name: CCache
-        if: matrix.os == 'linux' || matrix.os == 'mac'
         uses: hendrikmuhs/ccache-action@v1.2
         with:
-          max-size: ${{ matrix.arch == 'arm64' && '3G' || '2G' }}
+          max-size: '2G'
           key: ccache-${{ matrix.os }}-${{ matrix.arch }}
 
       - name: Build
         env:
           CCACHE_SLOPPINESS: time_macros
-        shell: bash
-        run: |
-          npx zx build.mjs ${{ matrix.arch }} --verbose
+        run: npx zx build.mjs ${{ matrix.arch }} --verbose
 
       - name: Test
         if: matrix.arch == runner.arch

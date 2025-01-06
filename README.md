@@ -36,7 +36,7 @@ correctly in Yode.
 ## Build
 
 ```bash
-$ node ./build.js [x64|ia32|arm64]
+$ npx zx ./build.mjs [x64|arm64]
 ```
 
 ## License

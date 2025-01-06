@@ -54,6 +54,7 @@ try {
     'CC.host_wrapper': ccache,
     'CXX.host_wrapper': ccache,
   })
+  console.log('Using ccache located at', ccache)
 } catch {}
 
 // Find Python 3
