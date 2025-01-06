@@ -48,7 +48,7 @@ jobs:
           CCACHE_SLOPPINESS: time_macros
         shell: bash
         run: |
-          npx zx build.js ${{ matrix.arch }} --verbose
+          npx zx build.mjs ${{ matrix.arch }} --verbose
 
       - name: Test
         if: matrix.arch == runner.arch
