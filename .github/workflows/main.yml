@@ -3,40 +3,27 @@ name: yode
 on: push
 
 jobs:
-  power_on_azure_vm:
-    name: Power On Azure VM
-    runs-on: ubuntu-latest
-    permissions:
-      id-token: write
-    steps:
-      - name: Az CLI login
-        uses: azure/login@v1
-        with:
-          # Creds created following:
-          # https://blog.beachside.dev/entry/2021/08/27/183000
-          creds: '${{ secrets.AZURE_CREDENTIALS_GITHUB_ACTIONS}}'
-
-      - name: Power ON
-        run: az vm start --resource-group yue --name yode-ci --no-wait
-
   build:
-    runs-on: ${{ matrix.os }}
+    runs-on: >-
+      ${{
+        (matrix.os == 'mac' && matrix.arch == 'arm64') &&
+          'macos-15' ||
+          (fromJson('{"linux":"ubuntu-22.04","mac":"macos-13","win":"windows-2022"}')[matrix.os])
+      }}
     continue-on-error: false
 
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-20.04, macos-11, [self-hosted, Windows]]
+        os: [linux, mac, win]
         arch: [x64]
         include:
-          - os: macos-11
+          - os: mac
             arch: arm64
-          - os: [self-hosted, Windows]
-            arch: ia32
 
     steps:
       - name: Install Linux Dependencies
-        if: startsWith(matrix.os, 'ubuntu')
+        if: matrix.os == 'linux'
         run: |
           sudo apt update
           sudo apt-get install -y libgtk-3-dev
@@ -45,15 +32,19 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
 
+      - uses: actions/setup-python@v3
+        with:
+          python-version: '3.11'
+
       - name: CCache
-        if: startsWith(matrix.os, 'ubuntu') || startsWith(matrix.os, 'macos')
+        if: matrix.os == 'linux' || matrix.os == 'mac'
         uses: hendrikmuhs/ccache-action@v1.2
         with:
           max-size: ${{ matrix.arch == 'arm64' && '3G' || '2G' }}
           key: ccache-${{ matrix.os }}-${{ matrix.arch }}
 
       - name: Build Posix
-        if: startsWith(matrix.os, 'ubuntu') || startsWith(matrix.os, 'macos')
+        if: matrix.os == 'linux' || matrix.os == 'mac'
         env:
           CCACHE_SLOPPINESS: time_macros
         shell: bash
@@ -67,7 +58,7 @@ jobs:
           node build.js --cc-wrapper=$WRAPPER ${{ matrix.arch }}
 
       - name: Build Windows
-        if: join(matrix.os, '-') == 'self-hosted-Windows'
+        if: matrix.os == 'win'
         run: |
           node build.js ${{ matrix.arch }}
 
@@ -78,7 +69,7 @@ jobs:
         run: out/Release/yode test/main.js
 
       - name: Upload Binary Files
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           path: out/Release/*.zip
           retention-days: 1
@@ -90,12 +81,14 @@ jobs:
 
     steps:
       - name: Download Files
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
+        with:
+          merge-multiple: true
 
       - name: Release
-        uses: softprops/action-gh-release@v0.1.14
+        uses: softprops/action-gh-release@v2
         with:
           draft: true
           name: Yode ${{ github.ref_name }}
           body: '## Changelog'
-          files: artifact/*.zip
+          files: '*.zip'
