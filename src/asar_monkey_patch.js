@@ -464,6 +464,7 @@ exports.wrapFsWithAsar = function(fs) {
     return files
   }
 
+  const {internalBinding} = require('internal/bootstrap/realm')
   const modulesBinding = internalBinding('modules')
   const {readPackageJSON} = modulesBinding
   modulesBinding.readPackageJSON = function(p, isESM, base, specifier) {

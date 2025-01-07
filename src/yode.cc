@@ -65,10 +65,18 @@ void Bootstrap(node::Environment* env,
   // Invoke the |bootstrap| with |exports|.
   std::vector<v8::Local<v8::Value>> args = { process, require, exports };
   TryCatchScope try_catch(env, TryCatchScope::CatchMode::kFatal);
-  bootstrap->Call(env->context(),
-                  env->context()->Global(),
-                  args.size(),
-                  args.data()).ToLocalChecked();
+  result = bootstrap->Call(env->context(),
+                           env->context()->Global(),
+                           args.size(),
+                           args.data());
+  if (try_catch.HasCaught()) {
+    node::AppendExceptionLine(env,
+                              try_catch.Exception(),
+                              try_catch.Message(),
+                              node::FATAL_ERROR);
+  } else {
+    result.ToLocalChecked();
+  }
 }
 
 // Like SpinEventLoop but replaces the uv_run with RunLoop.
