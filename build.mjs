@@ -122,7 +122,7 @@ for (let f of files) {
 }
 
 // Create zip.
-const distname = `out/${buildType}/yode-${version}-${process.platform}-${targetArch}.zip`
+const distname = `out/${buildType}/yode-${version}-${process.platform}-${targetArch}`
 const filename = process.platform == 'win32' ? 'yode.exe' : 'yode'
 await fs.emptyDir('dist')
 await fs.copy('node/LICENSE', 'dist/LICENSE')
