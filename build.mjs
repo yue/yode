@@ -96,11 +96,13 @@ if (process.platform == 'darwin') {
 // Copy fields from config.gypi of node.
 const configGypiPath = fs.readFileSync(path.join(__dirname, 'node', 'config.gypi')).toString()
 const configGypi = JSON.parse(configGypiPath.split('\n').slice(1).join('\n').replace(/'/g, '"'))
-for (const key of ['clang', 'node_builtin_shareable_builtins']) {
-  config.variables[key] = configGypi.variables[key]
+for (const key in configGypi.variables) {
+  if (!(key in config.variables))
+    config.variables[key] = configGypi.variables[key]
 }
-// Read node_library_files from config.gypi.
+// Map node_library_files from config.gypi.
 config.variables.node_library_files = configGypi.variables.node_library_files.map(l => 'node/' + l)
+// Write our own config.gypi file.
 fs.writeFileSync(`${__dirname}/config.gypi`, JSON.stringify(config, null, '  '))
 
 await $`${python} node/tools/gyp/gyp_main.py yode.gyp --no-parallel -f ninja -Dbuild_type=${buildType} -Iconfig.gypi -Icommon.gypi --depth .`

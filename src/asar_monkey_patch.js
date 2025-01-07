@@ -464,32 +464,25 @@ exports.wrapFsWithAsar = function(fs) {
     return files
   }
 
-  const {internalModuleReadJSON} = process.binding('fs')
-  process.binding('fs').internalModuleReadJSON = function(p) {
+  const modulesBinding = internalBinding('modules')
+  const {readPackageJSON} = modulesBinding
+  modulesBinding.readPackageJSON = function(p, isESM, base, specifier) {
     const [isAsar, filePath] = splitPath(p)
     if (!isAsar)
-      return internalModuleReadJSON(p)
+      return readPackageJSON(p, isESM, base, specifier)
     const info = process.asarArchive.getFileInfo(filePath)
-    if (!info)
-      return []
-    if (info.size === 0)
-      return []
-    if (info.unpacked) {
-      const realPath = process.asarArchive.copyFileOut(info)
-      return [fs.readFileSync(realPath, {encoding: 'utf8'}), true]
-    }
-    const buffer = process.asarArchive.readFile(info)
-    if (!buffer)
-      return []
-    const str = buffer.toString('utf8')
-    return [str, str.length > 0]
+    if (!info || info.size === 0)
+      return undefined
+    const realPath = process.asarArchive.copyFileOut(info)
+    return readPackageJSON(realPath, isESM, base, specifier)
   }
 
-  const {internalModuleStat} = process.binding('fs')
-  process.binding('fs').internalModuleStat = function(p) {
+  const internalFsBinding = internalBinding('fs')
+  const {internalModuleStat} = internalFsBinding
+  internalFsBinding.internalModuleStat = function(b, p) {
     const [isAsar, filePath] = splitPath(p)
     if (!isAsar)
-      return internalModuleStat(p)
+      return internalModuleStat(b, p)
     const stats = process.asarArchive.stat(filePath)
     if (!stats)
       return -34  // -ENOENT

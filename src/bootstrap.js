@@ -40,7 +40,7 @@ function wrapWithActivateUvLoop(func) {
       if (this.loaded || this.loading)
         return this.exports
       const filename = this.id + '.js'
-      const {function: compiledWrapper} = compileFunctionForCJSLoader(this.source, filename)
+      const {function: compiledWrapper} = compileFunctionForCJSLoader(this.source, filename, false, false)
       compiledWrapper.call(this.exports, this.exports, require, this, filename, dirname);
       return this.exports
     }
