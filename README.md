@@ -10,7 +10,7 @@ it is designed to be used together with [the Yue library](http://libyue.com).
   * On macOS it is `Cocoa` run loop;
   * On Windows it is `Win32` message loop.
 * When the executable is appended with ASAR archive, Yode will try to start with
-  with app inside the archive.
+  app inside the archive.
 * The process will not automatically quit when there is no work, you have to
   call the native APIs to quit the GUI message loop.
 * The process will quit when **BOTH** the GUI message loop and Node.js event
