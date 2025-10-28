@@ -467,23 +467,23 @@ exports.wrapFsWithAsar = function(fs) {
   const {internalBinding} = require('internal/bootstrap/realm')
   const modulesBinding = internalBinding('modules')
   const {readPackageJSON} = modulesBinding
-  modulesBinding.readPackageJSON = function(p, isESM, base, specifier) {
+  modulesBinding.readPackageJSON = function(p) {
     const [isAsar, filePath] = splitPath(p)
     if (!isAsar)
-      return readPackageJSON(p, isESM, base, specifier)
+      return readPackageJSON(p)
     const info = process.asarArchive.getFileInfo(filePath)
     if (!info || info.size === 0)
       return undefined
     const realPath = process.asarArchive.copyFileOut(info)
-    return readPackageJSON(realPath, isESM, base, specifier)
+    return readPackageJSON(realPath)
   }
 
   const internalFsBinding = internalBinding('fs')
   const {internalModuleStat} = internalFsBinding
-  internalFsBinding.internalModuleStat = function(b, p) {
+  internalFsBinding.internalModuleStat = function(p) {
     const [isAsar, filePath] = splitPath(p)
     if (!isAsar)
-      return internalModuleStat(b, p)
+      return internalModuleStat(p)
     const stats = process.asarArchive.stat(filePath)
     if (!stats)
       return -34  // -ENOENT

@@ -54,7 +54,6 @@ void Bootstrap(node::Environment* env,
   DefineJavaScript(env, exports);
   // Get the |bootstrap| function.
   v8::ScriptOrigin origin(
-      env->isolate(),
       node::FIXED_ONE_BYTE_STRING(env->isolate(), "bootstrap.js"));
   v8::MaybeLocal<v8::Script> script =
       v8::Script::Compile(env->context(), MainSource(env), &origin);
@@ -168,8 +167,7 @@ int Start(int argc, char* argv[]) {
     node::Stop(env.get());
   }
   isolate_data.reset();
-  platform->UnregisterIsolate(isolate);
-  isolate->Dispose();
+  platform->DisposeIsolate(isolate);
   node::TearDownOncePerProcess();
   return exit_code;
 }

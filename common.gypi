@@ -70,6 +70,7 @@
             '-Wno-sign-compare',
             '-Wno-implicit-function-declaration',
             '-Wno-inconsistent-missing-override',
+            '-Wno-nullability-completeness',
           ],
           'WARNING_CFLAGS!': [
             '-W',
