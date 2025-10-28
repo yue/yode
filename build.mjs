@@ -61,7 +61,7 @@ try {
 let python = 'python'
 for (const p of ['python', 'python3']) {
   try {
-    const version = await $`${p} --version`
+    const version = (await $({quiet: true})`${p} --version`).valueOf()
     if (version.startsWith('Python 3')) {
       python = p
       break
