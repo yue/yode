@@ -8,14 +8,14 @@ jobs:
       ${{
         (matrix.os == 'mac' && matrix.arch == 'arm64') &&
           'macos-15' ||
-          (fromJson('{"linux":"ubuntu-22.04","mac":"macos-13","win":"windows-2022"}')[matrix.os])
+          (fromJson('{"linux":"ubuntu-24.04","mac":"macos-15-intel","win":"windows-2025"}')[matrix.os])
       }}
     continue-on-error: false
 
     strategy:
       fail-fast: false
       matrix:
-        os: [linux, mac, win]
+        os: [linux, mac]
         arch: [x64]
         include:
           - os: mac
